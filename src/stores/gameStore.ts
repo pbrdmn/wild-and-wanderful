@@ -99,7 +99,7 @@ export const useGameStore = create<GameStore>((set, get) => {
     },
 
     setView: (view: ViewMode) => {
-      set({ view })
+      set({ view, message: null })
     },
 
     currentTileDescription: () => {

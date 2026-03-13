@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useGameStore } from '../../stores/gameStore'
 import { getBiomeSymbol } from '../../engine/biomes'
 import { canMoveTo } from '../../engine/movement'
@@ -9,6 +10,7 @@ export function MapView() {
   const movePlayer = useGameStore((s) => s.movePlayer)
   const setView = useGameStore((s) => s.setView)
   const message = useGameStore((s) => s.message)
+  const [selectedTile, setSelectedTile] = useState<{ x: number; y: number } | null>(null)
 
   const isAdjacent = (x: number, y: number) => {
     const dx = Math.abs(x - player.x)
@@ -16,12 +18,35 @@ export function MapView() {
     return (dx + dy) === 1
   }
 
+  const isPlayerTile = (x: number, y: number) =>
+    player.x === x && player.y === y
+
   const handleTileClick = (x: number, y: number) => {
+    if (selectedTile?.x === x && selectedTile?.y === y) {
+      setSelectedTile(null)
+      return
+    }
+
+    if (isPlayerTile(x, y)) {
+      setSelectedTile({ x, y })
+      return
+    }
+
     if (!isAdjacent(x, y)) return
     const tile = world.tiles[y][x]
     if (!canMoveTo(tile)) return
     if (player.ap < 1) return
-    movePlayer(x, y)
+
+    setSelectedTile({ x, y })
+  }
+
+  const canTravel = selectedTile != null && !isPlayerTile(selectedTile.x, selectedTile.y)
+
+  const handleTravel = () => {
+    if (!canTravel) return
+    movePlayer(selectedTile.x, selectedTile.y)
+    setSelectedTile(null)
+    setView('scene')
   }
 
   return (
@@ -45,30 +70,36 @@ export function MapView() {
         >
           {world.tiles.map((row, y) =>
             row.map((tile, x) => {
-              const isPlayer = player.x === x && player.y === y
+              const isPlayer = isPlayerTile(x, y)
               const isQuest = world.questMarker.x === x && world.questMarker.y === y
               const adj = isAdjacent(x, y)
+              const visible = tile.isExplored || adj || isPlayer
               const movable = adj && canMoveTo(tile) && player.ap >= 1
+              const clickable = movable || isPlayer
+
+              const isSelected = selectedTile?.x === x && selectedTile?.y === y
 
               let cellClass = styles.tile
-              if (!tile.isExplored && !isQuest) cellClass += ` ${styles.fog}`
+              if (!visible && !isQuest) cellClass += ` ${styles.fog}`
               if (isPlayer) cellClass += ` ${styles.player}`
-              if (adj && tile.isExplored) cellClass += ` ${styles.adjacent}`
-              if (movable) cellClass += ` ${styles.movable}`
+              if (isSelected) cellClass += ` ${styles.selected}`
+              if (adj) cellClass += ` ${styles.adjacent}`
+              if (clickable) cellClass += ` ${styles.movable}`
 
               return (
                 <button
                   key={`${x}-${y}`}
                   className={cellClass}
                   onClick={() => handleTileClick(x, y)}
-                  disabled={!movable}
+                  disabled={!clickable}
                   data-testid={`tile-${x}-${y}`}
                   data-explored={tile.isExplored}
+                  data-visible={visible}
                   data-terrain={tile.terrain}
                   aria-label={
                     isPlayer
                       ? 'Your position'
-                      : tile.isExplored
+                      : visible
                         ? `${tile.terrain} at ${x},${y}`
                         : isQuest
                           ? 'Quest marker'
@@ -79,7 +110,7 @@ export function MapView() {
                     <span className={styles.playerIcon}>@</span>
                   ) : isQuest ? (
                     <span className={styles.questIcon}>X</span>
-                  ) : tile.isExplored ? (
+                  ) : visible ? (
                     <span className={styles.biomeIcon}>{getBiomeSymbol(tile.terrain)}</span>
                   ) : null}
                 </button>
@@ -97,11 +128,19 @@ export function MapView() {
 
       <footer className={styles.actions}>
         <button
+          className={`${styles.actionButton} ${styles.travelButton}`}
+          onClick={handleTravel}
+          disabled={!canTravel}
+          data-testid="travel-button"
+        >
+          Travel
+        </button>
+        <button
           className={styles.actionButton}
           onClick={() => setView('scene')}
-          data-testid="back-to-scene-button"
+          data-testid="close-map-button"
         >
-          Back to Scene
+          Close Map
         </button>
       </footer>
     </div>
