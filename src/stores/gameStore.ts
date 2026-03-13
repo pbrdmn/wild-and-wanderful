@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { GameState, Player, World, GamePhase, ActiveEnemy, Item } from '../engine/types'
+import type { GameState, Player, World, GamePhase, ActiveEnemy, Item, Skill } from '../engine/types'
 import { DEFAULT_MAX_AP, Direction, DIRECTION_OFFSETS } from '../engine/types'
 import { generateWorld, findStartingPosition } from '../engine/world'
 import { movePlayer as engineMovePlayer, endTurn as engineEndTurn, getAdjacentTiles, canMoveTo } from '../engine/movement'
@@ -14,12 +14,27 @@ import {
   swapEquipment as engineSwapEquipment,
   getEquippedItem,
 } from '../engine/inventory'
+import {
+  getAvailableSkills as engineGetAvailableSkills,
+  canUseSkill as engineCanUseSkill,
+  unlockSkill as engineUnlockSkill,
+  setActiveSkills as engineSetActiveSkills,
+  getSkillById,
+} from '../engine/skills'
+import {
+  playerBasicAttack,
+  playerSkillAttack,
+  enemyTurn as engineEnemyTurn,
+  attemptFlee as engineAttemptFlee,
+  getCombatOutcome,
+} from '../engine/combat'
+import { checkTileEncounter } from '../engine/enemies'
 import { getTileDescription, getPeripheralGlimpse } from '../engine/biomes'
 import { createRng } from '../engine/random'
 import { debouncedSave, loadGame, clearSave } from '../utils/persistence'
 import type { SaveData } from '../utils/persistence'
 
-export type ViewMode = 'scene' | 'map' | 'inventory' | 'intro'
+export type ViewMode = 'scene' | 'map' | 'inventory' | 'intro' | 'skills'
 
 interface GameActions {
   initGame: (seed?: number) => void
@@ -34,6 +49,11 @@ interface GameActions {
   equipItem: (itemId: string) => void
   unequipItem: () => void
   swapEquipment: (itemId: string) => void
+  attack: () => void
+  useSkill: (skillId: string) => void
+  flee: () => void
+  unlockSkill: (skillId: string) => void
+  setActiveSkills: (skillIds: string[]) => void
 }
 
 interface GameDerived {
@@ -42,6 +62,7 @@ interface GameDerived {
   adjacentTiles: () => AdjacentTile[]
   movableTiles: () => AdjacentTile[]
   equippedItem: () => Item | null
+  availableSkills: () => Skill[]
 }
 
 interface GameStore extends GameState, GameActions, GameDerived {
@@ -50,6 +71,10 @@ interface GameStore extends GameState, GameActions, GameDerived {
   gameSeed: number
   loaded: boolean
   offeredItems: Item[]
+  combatLog: string[]
+  playerDodgeChance: number
+  playerHasShield: boolean
+  previousPosition: { x: number; y: number } | null
 }
 
 function createInitialPlayer(world: World): Player {
@@ -64,6 +89,9 @@ function createInitialPlayer(world: World): Player {
     wounds: 0,
     maxWounds: 1,
     inventory: { items: [], equippedItemId: null, maxSlots: 5 },
+    unlockedSkillIds: [],
+    activeSkillIds: [],
+    maxActiveSkills: 2,
   }
 }
 
@@ -86,6 +114,10 @@ export const useGameStore = create<GameStore>((set, get) => {
     gameSeed: defaultSeed,
     loaded: false,
     offeredItems: [],
+    combatLog: [],
+    playerDodgeChance: 0,
+    playerHasShield: false,
+    previousPosition: null,
 
     initGame: (seed?: number) => {
       const actualSeed = seed ?? Date.now()
@@ -105,6 +137,10 @@ export const useGameStore = create<GameStore>((set, get) => {
         gameSeed: actualSeed,
         loaded: true,
         offeredItems: [...offeredItems],
+        combatLog: [],
+        playerDodgeChance: 0,
+        playerHasShield: false,
+        previousPosition: null,
       })
     },
 
@@ -125,6 +161,10 @@ export const useGameStore = create<GameStore>((set, get) => {
         view: save.gamePhase === 'intro' ? 'intro' : 'scene',
         message: save.gamePhase === 'intro' ? null : 'Welcome back, wanderer.',
         loaded: true,
+        combatLog: [],
+        playerDodgeChance: 0,
+        playerHasShield: false,
+        previousPosition: null,
       })
       return true
     },
@@ -146,11 +186,26 @@ export const useGameStore = create<GameStore>((set, get) => {
       const newTiles = world.tiles.map((row) => row.map((t) => ({ ...t })))
       newTiles[y][x] = result.tile
 
-      set({
+      const updates: Partial<GameStore> = {
         player: result.player,
         world: { ...world, tiles: newTiles },
         message: null,
-      })
+        previousPosition: { x: player.x, y: player.y },
+      }
+
+      const encounter = checkTileEncounter(result.tile, actionRng)
+      if (encounter) {
+        newTiles[y][x] = { ...newTiles[y][x], enemyId: undefined }
+        updates.world = { ...world, tiles: newTiles }
+        updates.gamePhase = 'combat'
+        updates.activeEnemy = encounter
+        updates.combatLog = [`A ${encounter.name} appears!`]
+        updates.message = `A ${encounter.name} blocks your path!`
+        updates.playerDodgeChance = 0
+        updates.playerHasShield = false
+      }
+
+      set(updates)
       return true
     },
 
@@ -292,6 +347,228 @@ export const useGameStore = create<GameStore>((set, get) => {
       })
     },
 
+    attack: () => {
+      const { player, activeEnemy, combatLog, playerDodgeChance, playerHasShield } = get()
+      if (!activeEnemy) return
+
+      const result = playerBasicAttack(player, activeEnemy)
+      if (!result.success) {
+        set({ message: result.reason ?? 'Cannot attack.' })
+        return
+      }
+
+      const newLog = [...combatLog, ...result.messages]
+      const outcome = getCombatOutcome(result.player, result.enemy)
+
+      if (outcome === 'victory') {
+        set({
+          player: result.player,
+          activeEnemy: undefined,
+          gamePhase: 'exploring',
+          combatLog: [],
+          message: newLog[newLog.length - 1],
+          playerDodgeChance: 0,
+          playerHasShield: false,
+        })
+        return
+      }
+
+      const enemyResult = engineEnemyTurn(result.enemy, result.player, playerDodgeChance, playerHasShield)
+      const fullLog = [...newLog, ...enemyResult.messages]
+      const postEnemyOutcome = getCombatOutcome(enemyResult.player, enemyResult.enemy)
+
+      if (postEnemyOutcome === 'defeat') {
+        const startPos = findStartingPosition(get().world)
+        set({
+          player: { ...enemyResult.player, x: startPos.x, y: startPos.y, wounds: 0, ap: DEFAULT_MAX_AP },
+          activeEnemy: undefined,
+          gamePhase: 'exploring',
+          combatLog: [],
+          message: 'You retreat to the village, battered but alive.',
+          playerDodgeChance: 0,
+          playerHasShield: false,
+        })
+        return
+      }
+
+      set({
+        player: enemyResult.player,
+        activeEnemy: enemyResult.enemy,
+        combatLog: fullLog.slice(-5),
+        message: fullLog[fullLog.length - 1],
+        playerDodgeChance: 0,
+        playerHasShield: false,
+      })
+    },
+
+    useSkill: (skillId: string) => {
+      const { player, activeEnemy, combatLog, playerDodgeChance, playerHasShield } = get()
+      if (!activeEnemy) return
+
+      const skill = getSkillById(skillId)
+      if (!skill) {
+        set({ message: 'Unknown skill.' })
+        return
+      }
+
+      if (!engineCanUseSkill(player, skillId)) {
+        set({ message: 'Cannot use this skill right now.' })
+        return
+      }
+
+      const result = playerSkillAttack(player, activeEnemy, skill)
+      if (!result.success) {
+        set({ message: result.reason ?? 'Skill failed.' })
+        return
+      }
+
+      const newLog = [...combatLog, ...result.messages]
+      const outcome = getCombatOutcome(result.player, result.enemy)
+
+      if (outcome === 'victory') {
+        set({
+          player: result.player,
+          activeEnemy: undefined,
+          gamePhase: 'exploring',
+          combatLog: [],
+          message: newLog[newLog.length - 1],
+          playerDodgeChance: 0,
+          playerHasShield: false,
+        })
+        return
+      }
+
+      let newDodge = 0
+      let newShield = false
+      if (skill.effect.type === 'dodge_next') {
+        newDodge = skill.effect.chance
+      }
+      if (skill.effect.type === 'status' && skill.effect.statusEffect === 'shield') {
+        newShield = true
+      }
+
+      const enemyResult = engineEnemyTurn(result.enemy, result.player, newDodge, newShield)
+      const fullLog = [...newLog, ...enemyResult.messages]
+      const postEnemyOutcome = getCombatOutcome(enemyResult.player, enemyResult.enemy)
+
+      if (postEnemyOutcome === 'defeat') {
+        const startPos = findStartingPosition(get().world)
+        set({
+          player: { ...enemyResult.player, x: startPos.x, y: startPos.y, wounds: 0, ap: DEFAULT_MAX_AP },
+          activeEnemy: undefined,
+          gamePhase: 'exploring',
+          combatLog: [],
+          message: 'You retreat to the village, battered but alive.',
+          playerDodgeChance: 0,
+          playerHasShield: false,
+        })
+        return
+      }
+
+      if (postEnemyOutcome === 'victory') {
+        set({
+          player: enemyResult.player,
+          activeEnemy: undefined,
+          gamePhase: 'exploring',
+          combatLog: [],
+          message: fullLog[fullLog.length - 1],
+          playerDodgeChance: 0,
+          playerHasShield: false,
+        })
+        return
+      }
+
+      set({
+        player: enemyResult.player,
+        activeEnemy: enemyResult.enemy,
+        combatLog: fullLog.slice(-5),
+        message: fullLog[fullLog.length - 1],
+        playerDodgeChance: 0,
+        playerHasShield: false,
+      })
+    },
+
+    flee: () => {
+      const { player, previousPosition, combatLog } = get()
+      const result = engineAttemptFlee(player, actionRng)
+
+      if (!result.success) {
+        set({ message: result.reason ?? 'Cannot flee.' })
+        return
+      }
+
+      if (result.fled) {
+        const fleePos = previousPosition ?? { x: player.x, y: player.y }
+        set({
+          player: { ...result.player, x: fleePos.x, y: fleePos.y },
+          activeEnemy: undefined,
+          gamePhase: 'exploring',
+          combatLog: [],
+          message: result.message,
+          playerDodgeChance: 0,
+          playerHasShield: false,
+        })
+        return
+      }
+
+      const { activeEnemy, playerDodgeChance, playerHasShield } = get()
+      if (!activeEnemy) return
+
+      const enemyResult = engineEnemyTurn(activeEnemy, result.player, playerDodgeChance, playerHasShield)
+      const fullLog = [...combatLog, result.message, ...enemyResult.messages]
+      const outcome = getCombatOutcome(enemyResult.player, enemyResult.enemy)
+
+      if (outcome === 'defeat') {
+        const startPos = findStartingPosition(get().world)
+        set({
+          player: { ...enemyResult.player, x: startPos.x, y: startPos.y, wounds: 0, ap: DEFAULT_MAX_AP },
+          activeEnemy: undefined,
+          gamePhase: 'exploring',
+          combatLog: [],
+          message: 'You retreat to the village, battered but alive.',
+          playerDodgeChance: 0,
+          playerHasShield: false,
+        })
+        return
+      }
+
+      set({
+        player: enemyResult.player,
+        activeEnemy: enemyResult.enemy,
+        combatLog: fullLog.slice(-5),
+        message: fullLog[fullLog.length - 1],
+        playerDodgeChance: 0,
+        playerHasShield: false,
+      })
+    },
+
+    unlockSkill: (skillId: string) => {
+      const { player } = get()
+      const result = engineUnlockSkill(player, skillId)
+      if (!result.success) {
+        set({ message: result.reason ?? 'Cannot unlock skill.' })
+        return
+      }
+      const skill = getSkillById(skillId)
+      set({
+        player: result.player,
+        message: skill ? `You learn ${skill.name}!` : null,
+      })
+    },
+
+    setActiveSkills: (skillIds: string[]) => {
+      const { player } = get()
+      const result = engineSetActiveSkills(player, skillIds)
+      if (!result.success) {
+        set({ message: result.reason ?? 'Cannot set active skills.' })
+        return
+      }
+      set({
+        player: result.player,
+        message: 'Active skills updated.',
+      })
+    },
+
     setView: (view: ViewMode) => {
       set({ view, message: null })
     },
@@ -333,6 +610,11 @@ export const useGameStore = create<GameStore>((set, get) => {
     equippedItem: () => {
       const { player } = get()
       return getEquippedItem(player)
+    },
+
+    availableSkills: () => {
+      const { player } = get()
+      return engineGetAvailableSkills(player)
     },
   }
 })

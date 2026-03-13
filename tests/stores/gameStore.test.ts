@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useGameStore } from '../../src/stores/gameStore'
-import { TerrainType, DEFAULT_MAX_AP, AP_COST_REST, AP_COST_SEARCH, AP_COST_SWAP, ItemCategory } from '../../src/engine/types'
+import { TerrainType, DEFAULT_MAX_AP, AP_COST_REST, AP_COST_SEARCH, AP_COST_SWAP, AP_COST_ATTACK, ItemCategory } from '../../src/engine/types'
+import type { ActiveEnemy } from '../../src/engine/types'
 
 function initAndSkipIntro(seed: number) {
   useGameStore.getState().initGame(seed)
@@ -338,6 +339,132 @@ describe('gameStore', () => {
       if (itemId) {
         useGameStore.getState().swapEquipment(itemId)
         expect(useGameStore.getState().message).toContain('full turn')
+      }
+    })
+  })
+
+  describe('combat actions', () => {
+    function enterCombat() {
+      const enemy: ActiveEnemy = {
+        name: 'Test Enemy',
+        strength: 1,
+        hp: 3,
+        maxHp: 3,
+        hasInitiative: false,
+        statusEffects: [],
+      }
+      useGameStore.setState({
+        gamePhase: 'combat',
+        activeEnemy: enemy,
+        combatLog: [],
+      })
+    }
+
+    it('attack deals damage to the enemy', () => {
+      enterCombat()
+      const hpBefore = useGameStore.getState().activeEnemy!.hp
+      useGameStore.getState().attack()
+      const state = useGameStore.getState()
+      if (state.activeEnemy) {
+        expect(state.activeEnemy.hp).toBeLessThan(hpBefore)
+      }
+      expect(state.player.ap).toBe(DEFAULT_MAX_AP - AP_COST_ATTACK)
+    })
+
+    it('attack transitions to exploring on victory', () => {
+      const enemy: ActiveEnemy = {
+        name: 'Weak Enemy',
+        strength: 1,
+        hp: 1,
+        maxHp: 1,
+        hasInitiative: false,
+        statusEffects: [],
+      }
+      useGameStore.setState({
+        gamePhase: 'combat',
+        activeEnemy: enemy,
+        combatLog: [],
+      })
+      useGameStore.getState().attack()
+      const state = useGameStore.getState()
+      expect(state.gamePhase).toBe('exploring')
+      expect(state.activeEnemy).toBeUndefined()
+    })
+
+    it('attack fails when no weapon is equipped', () => {
+      enterCombat()
+      useGameStore.setState({
+        player: {
+          ...useGameStore.getState().player,
+          inventory: { items: [], equippedItemId: null, maxSlots: 5 },
+        },
+      })
+      useGameStore.getState().attack()
+      expect(useGameStore.getState().message).toContain('weapon')
+    })
+
+    it('flee returns player to exploring when successful', () => {
+      enterCombat()
+      let fled = false
+      for (let i = 0; i < 20; i++) {
+        enterCombat()
+        useGameStore.setState({
+          player: { ...useGameStore.getState().player, ap: DEFAULT_MAX_AP },
+        })
+        useGameStore.getState().flee()
+        if (useGameStore.getState().gamePhase === 'exploring') {
+          fled = true
+          break
+        }
+      }
+      expect(fled).toBe(true)
+    })
+
+    it('flee fails when AP is insufficient', () => {
+      enterCombat()
+      useGameStore.setState({
+        player: { ...useGameStore.getState().player, ap: 0 },
+      })
+      useGameStore.getState().flee()
+      expect(useGameStore.getState().message).toContain('AP')
+      expect(useGameStore.getState().gamePhase).toBe('combat')
+    })
+  })
+
+  describe('skill actions', () => {
+    it('unlockSkill adds skill to player', () => {
+      useGameStore.getState().unlockSkill('heavy-strike')
+      expect(useGameStore.getState().player.unlockedSkillIds).toContain('heavy-strike')
+    })
+
+    it('unlockSkill fails for unknown skill', () => {
+      useGameStore.getState().unlockSkill('nonexistent')
+      expect(useGameStore.getState().message).toContain('Unknown')
+    })
+
+    it('setActiveSkills updates active skills', () => {
+      useGameStore.getState().unlockSkill('heavy-strike')
+      useGameStore.getState().unlockSkill('parry')
+      useGameStore.getState().setActiveSkills(['heavy-strike', 'parry'])
+      expect(useGameStore.getState().player.activeSkillIds).toEqual(['heavy-strike', 'parry'])
+    })
+
+    it('setActiveSkills fails when exceeding max', () => {
+      useGameStore.getState().unlockSkill('heavy-strike')
+      useGameStore.getState().unlockSkill('parry')
+      useGameStore.getState().unlockSkill('daze-slam')
+      useGameStore.getState().setActiveSkills(['heavy-strike', 'parry', 'daze-slam'])
+      expect(useGameStore.getState().message).toContain('2')
+    })
+
+    it('availableSkills returns skills matching equipped item', () => {
+      useGameStore.getState().unlockSkill('heavy-strike')
+      useGameStore.getState().setActiveSkills(['heavy-strike'])
+      const equipped = useGameStore.getState().equippedItem()
+      const skills = useGameStore.getState().availableSkills()
+      if (equipped?.category === 'melee') {
+        expect(skills).toHaveLength(1)
+        expect(skills[0].id).toBe('heavy-strike')
       }
     })
   })
