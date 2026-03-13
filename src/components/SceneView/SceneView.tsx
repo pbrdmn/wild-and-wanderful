@@ -188,7 +188,12 @@ export function SceneView() {
         )}
 
         {message && (
-          <p className={styles.message} data-testid="game-message" role="status">
+          <p
+            className={styles.message}
+            data-testid="game-message"
+            role={inCombat ? 'alert' : 'status'}
+            aria-live="polite"
+          >
             {message}
           </p>
         )}

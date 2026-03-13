@@ -26,6 +26,23 @@
   flex-shrink: 0;
 }
 
+.skipLink {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-forest);
+  color: var(--color-parchment);
+  z-index: 100;
+  font-family: var(--font-body);
+  text-decoration: none;
+  border-radius: 0 0 var(--radius-sm) 0;
+}
+
+.skipLink:focus {
+  top: 0;
+}
+
 .loading {
   display: flex;
   align-items: center;

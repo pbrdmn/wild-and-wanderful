@@ -137,13 +137,14 @@ export function MapView() {
                   data-terrain={tile.terrain}
                   aria-label={
                     isPlayer
-                      ? 'Your position'
+                      ? `Your position, ${tile.terrain} at row ${y + 1}, column ${x + 1}`
                       : visible
-                        ? `${tile.terrain} at ${x},${y}`
+                        ? `${tile.terrain} at row ${y + 1}, column ${x + 1}${movable ? ', passable' : ''}`
                         : isQuest
                           ? 'Quest marker'
                           : 'Unexplored'
                   }
+                  aria-current={isPlayer ? 'true' : undefined}
                 >
                   {isPlayer ? (
                     <span className={styles.playerIcon}>@</span>
