@@ -20,13 +20,29 @@
   color: var(--color-forest-dark);
 }
 
-.hud {
-  font-size: 0.875rem;
+.zoomButton {
+  padding: var(--spacing-xs) var(--spacing-md);
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-parchment);
+  background-color: var(--color-forest);
+  border: none;
+  border-radius: var(--radius-sm);
+  min-height: 36px;
+  transition: background-color 150ms ease;
 }
 
-.ap {
-  font-weight: 600;
-  color: var(--color-accent-dark);
+.zoomButton:active {
+  background-color: var(--color-forest-dark);
+}
+
+.questIndicator {
+  text-align: center;
+  font-size: 0.8rem;
+  font-style: italic;
+  color: var(--color-danger);
+  padding: var(--spacing-xs) 0;
 }
 
 .gridContainer {
@@ -45,6 +61,19 @@
   aspect-ratio: 1;
   background-color: var(--color-parchment-dark);
   border-radius: var(--radius-sm);
+}
+
+.gridZoomed .tile {
+  font-size: clamp(0.8rem, 3vw, 1.2rem);
+}
+
+.gridZoomed .playerIcon,
+.gridZoomed .questIcon {
+  font-size: clamp(1rem, 4vw, 1.6rem);
+}
+
+.gridZoomed .biomeIcon {
+  font-size: clamp(0.7rem, 2.5vw, 1rem);
 }
 
 .tile {

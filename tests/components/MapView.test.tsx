@@ -19,8 +19,17 @@ describe('MapView', () => {
     expect(grid).toBeInTheDocument()
   })
 
-  it('renders the correct number of tiles', () => {
+  it('renders zoomed viewport by default (5x5 or fewer tiles)', () => {
     render(<MapView />)
+    const tiles = screen.getAllByTestId(/^tile-\d+-\d+$/)
+    expect(tiles.length).toBeLessThanOrEqual(25)
+    expect(tiles.length).toBeGreaterThan(0)
+  })
+
+  it('renders all tiles when zoom is toggled off', async () => {
+    const user = userEvent.setup()
+    render(<MapView />)
+    await user.click(screen.getByTestId('zoom-toggle'))
     const totalTiles = DEFAULT_WORLD_SIZE * DEFAULT_WORLD_SIZE
     const tiles = screen.getAllByTestId(/^tile-\d+-\d+$/)
     expect(tiles.length).toBe(totalTiles)

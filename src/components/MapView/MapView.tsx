@@ -4,6 +4,22 @@ import { getBiomeSymbol } from '../../engine/biomes'
 import { canMoveTo } from '../../engine/movement'
 import styles from './MapView.module.css'
 
+const ZOOM_RADIUS = 2
+
+function getQuestDirection(
+  player: { x: number; y: number },
+  quest: { x: number; y: number },
+): string {
+  const dx = quest.x - player.x
+  const dy = quest.y - player.y
+  const parts: string[] = []
+  if (dy < 0) parts.push('North')
+  if (dy > 0) parts.push('South')
+  if (dx > 0) parts.push('East')
+  if (dx < 0) parts.push('West')
+  return parts.join('-') || 'Here'
+}
+
 export function MapView() {
   const player = useGameStore((s) => s.player)
   const world = useGameStore((s) => s.world)
@@ -11,6 +27,7 @@ export function MapView() {
   const setView = useGameStore((s) => s.setView)
   const message = useGameStore((s) => s.message)
   const [selectedTile, setSelectedTile] = useState<{ x: number; y: number } | null>(null)
+  const [zoomed, setZoomed] = useState(true)
 
   const isAdjacent = (x: number, y: number) => {
     const dx = Math.abs(x - player.x)
@@ -47,22 +64,51 @@ export function MapView() {
     setView('scene')
   }
 
+  const viewMinX = zoomed ? Math.max(0, player.x - ZOOM_RADIUS) : 0
+  const viewMaxX = zoomed ? Math.min(world.width - 1, player.x + ZOOM_RADIUS) : world.width - 1
+  const viewMinY = zoomed ? Math.max(0, player.y - ZOOM_RADIUS) : 0
+  const viewMaxY = zoomed ? Math.min(world.height - 1, player.y + ZOOM_RADIUS) : world.height - 1
+  const viewCols = viewMaxX - viewMinX + 1
+  const viewRows = viewMaxY - viewMinY + 1
+
+  const questOffScreen = zoomed && (
+    world.questMarker.x < viewMinX || world.questMarker.x > viewMaxX ||
+    world.questMarker.y < viewMinY || world.questMarker.y > viewMaxY
+  )
+  const questDir = questOffScreen ? getQuestDirection(player, world.questMarker) : null
+
   return (
     <div className={styles.mapView}>
       <header className={styles.header}>
         <h1 className={styles.title}>The Map</h1>
+        <button
+          className={styles.zoomButton}
+          onClick={() => setZoomed((z) => !z)}
+          data-testid="zoom-toggle"
+        >
+          {zoomed ? 'Full Map' : 'Zoom In'}
+        </button>
       </header>
+
+      {questDir && (
+        <p className={styles.questIndicator} data-testid="quest-direction">
+          Quest: {questDir}
+        </p>
+      )}
 
       <div className={styles.gridContainer} data-testid="map-grid">
         <div
-          className={styles.grid}
+          className={`${styles.grid} ${zoomed ? styles.gridZoomed : ''}`}
           style={{
-            gridTemplateColumns: `repeat(${world.width}, 1fr)`,
-            gridTemplateRows: `repeat(${world.height}, 1fr)`,
+            gridTemplateColumns: `repeat(${viewCols}, 1fr)`,
+            gridTemplateRows: `repeat(${viewRows}, 1fr)`,
           }}
         >
-          {world.tiles.map((row, y) =>
-            row.map((tile, x) => {
+          {Array.from({ length: viewRows }, (_, ry) => {
+            const y = viewMinY + ry
+            return Array.from({ length: viewCols }, (_, rx) => {
+              const x = viewMinX + rx
+              const tile = world.tiles[y][x]
               const isPlayer = isPlayerTile(x, y)
               const isQuest = world.questMarker.x === x && world.questMarker.y === y
               const adj = isAdjacent(x, y)
@@ -108,8 +154,8 @@ export function MapView() {
                   ) : null}
                 </button>
               )
-            }),
-          )}
+            })
+          })}
         </div>
       </div>
 
