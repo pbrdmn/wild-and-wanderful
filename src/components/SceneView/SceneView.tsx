@@ -1,7 +1,10 @@
+import { useState } from 'react'
 import { useGameStore } from '../../stores/gameStore'
 import { getBiomeData } from '../../engine/biomes'
-import { AP_COST_REST, AP_COST_SEARCH, AP_COST_ATTACK, AP_COST_FLEE } from '../../engine/types'
+import { canMoveTo } from '../../engine/movement'
+import { AP_COST_ATTACK, AP_COST_FLEE, DIRECTION_OFFSETS, Direction } from '../../engine/types'
 import type { AnimalSpecies as AnimalSpeciesType } from '../../engine/types'
+import { playSound, isMuted, setMuted } from '../../utils/audio'
 import styles from './SceneView.module.css'
 
 const SPECIES_LABELS: Record<AnimalSpeciesType, string> = {
@@ -21,23 +24,51 @@ function StatusEffectIcon({ type }: { type: string }) {
 export function SceneView() {
   const player = useGameStore((s) => s.player)
   const world = useGameStore((s) => s.world)
-  const turnNumber = useGameStore((s) => s.turnNumber)
   const gamePhase = useGameStore((s) => s.gamePhase)
   const activeEnemy = useGameStore((s) => s.activeEnemy)
   const message = useGameStore((s) => s.message)
   const combatLog = useGameStore((s) => s.combatLog)
   const setView = useGameStore((s) => s.setView)
   const endTurn = useGameStore((s) => s.endTurn)
-  const rest = useGameStore((s) => s.rest)
-  const search = useGameStore((s) => s.search)
-  const attack = useGameStore((s) => s.attack)
+  const storeRest = useGameStore((s) => s.rest)
+  const storeSearch = useGameStore((s) => s.search)
+  const storeAttack = useGameStore((s) => s.attack)
   const useSkill = useGameStore((s) => s.useSkill)
   const flee = useGameStore((s) => s.flee)
   const retire = useGameStore((s) => s.retire)
   const currentTileDescription = useGameStore((s) => s.currentTileDescription)
   const peripheralGlimpses = useGameStore((s) => s.peripheralGlimpses)
+  const storeMove = useGameStore((s) => s.movePlayer)
   const equippedItem = useGameStore((s) => s.equippedItem)
   const availableSkills = useGameStore((s) => s.availableSkills)
+
+  const [soundMuted, setSoundMuted] = useState(isMuted())
+
+  const toggleMute = () => {
+    const next = !soundMuted
+    setSoundMuted(next)
+    setMuted(next)
+  }
+
+  const movePlayer = (x: number, y: number) => {
+    storeMove(x, y)
+    playSound('move')
+  }
+
+  const search = () => {
+    storeSearch()
+    playSound('tap')
+  }
+
+  const rest = () => {
+    storeRest()
+    playSound('tap')
+  }
+
+  const attack = () => {
+    storeAttack()
+    playSound('hit')
+  }
 
   const currentTile = world.tiles[player.y][player.x]
   const biome = getBiomeData(currentTile.terrain)
@@ -47,9 +78,7 @@ export function SceneView() {
   const skills = availableSkills()
 
   const inCombat = gamePhase === 'combat' && activeEnemy != null
-  const canAct = player.ap >= AP_COST_REST
-  const canRest = canAct && player.wounds > 0
-  const canSearch = player.ap >= AP_COST_SEARCH
+  const canRest = player.wounds > 0
   const canAttack = inCombat && player.ap >= AP_COST_ATTACK && equipped != null
   const canFlee = inCombat && player.ap >= AP_COST_FLEE
 
@@ -59,17 +88,24 @@ export function SceneView() {
         <div className={styles.headerTop}>
           <h1 className={styles.title}>{biome.name}</h1>
           <div className={styles.hud}>
-            <span className={styles.ap} data-testid="ap-display">
-              AP: {player.ap}/{player.maxAp}
-            </span>
+            {inCombat && (
+              <span className={styles.ap} data-testid="ap-display">
+                AP: {player.ap}/{player.maxAp}
+              </span>
+            )}
             <span className={styles.wounds} data-testid="wounds-display">
               Wounds: {player.wounds}/{player.maxWounds}
             </span>
             <span className={styles.level} data-testid="level-display">Lv {player.level}</span>
             <span className={styles.xp} data-testid="xp-display">XP: {player.xp}</span>
-            <span className={styles.turn} data-testid="turn-display">
-              Turn {turnNumber}
-            </span>
+            <button
+              className={styles.muteButton}
+              onClick={toggleMute}
+              aria-label={soundMuted ? 'Unmute sounds' : 'Mute sounds'}
+              data-testid="mute-toggle"
+            >
+              {soundMuted ? '🔇' : '🔊'}
+            </button>
           </div>
         </div>
         {equipped && (
@@ -88,7 +124,7 @@ export function SceneView() {
           <div className={styles.legacyNpc} data-testid="legacy-npc">
             <p>
               You meet <strong>{currentTile.legacyNpc.name}</strong> the{' '}
-              {SPECIES_LABELS[currentTile.legacyNpc.species]}, a retired adventurer who{' '}
+              {SPECIES_LABELS[currentTile.legacyNpc.species]}, a retired wanderer who{' '}
               {currentTile.legacyNpc.questCompleted
                 ? 'completed the great quest'
                 : 'retired peacefully'}.
@@ -99,11 +135,29 @@ export function SceneView() {
 
         {!inCombat && (
           <div className={styles.glimpses} data-testid="peripheral-glimpses">
-            {glimpses.map((g) => (
-              <p key={g.direction} className={styles.glimpse}>
-                {g.text}
-              </p>
-            ))}
+            {glimpses.map((g) => {
+              const offset = DIRECTION_OFFSETS[g.direction as Direction]
+              const tx = player.x + offset.dx
+              const ty = player.y + offset.dy
+              const inBounds = tx >= 0 && tx < world.width && ty >= 0 && ty < world.height
+              const tile = inBounds ? world.tiles[ty][tx] : null
+              const passable = tile != null && canMoveTo(tile)
+
+              return passable ? (
+                <button
+                  key={g.direction}
+                  className={`${styles.glimpse} ${styles.glimpseLink}`}
+                  onClick={() => movePlayer(tx, ty)}
+                  data-testid={`glimpse-${g.direction}`}
+                >
+                  {g.text}
+                </button>
+              ) : (
+                <p key={g.direction} className={`${styles.glimpse} ${styles.glimpseBlocked}`} data-testid={`glimpse-${g.direction}`}>
+                  {g.text}
+                </p>
+              )
+            })}
           </div>
         )}
 
@@ -172,7 +226,12 @@ export function SceneView() {
         )}
 
         {message && (
-          <p className={styles.message} data-testid="game-message" role="status">
+          <p
+            className={styles.message}
+            data-testid="game-message"
+            role={inCombat ? 'alert' : 'status'}
+            aria-live="polite"
+          >
             {message}
           </p>
         )}
@@ -203,9 +262,8 @@ export function SceneView() {
               Skills
             </button>
             <button
-              className={`${styles.actionButton} ${!canSearch ? styles.disabled : ''}`}
+              className={styles.actionButton}
               onClick={search}
-              disabled={!canSearch}
               data-testid="search-button"
             >
               Search
@@ -227,13 +285,15 @@ export function SceneView() {
             </button>
           </>
         )}
-        <button
-          className={styles.actionButton}
-          onClick={endTurn}
-          data-testid="end-turn-button"
-        >
-          End Turn
-        </button>
+        {inCombat && (
+          <button
+            className={styles.actionButton}
+            onClick={endTurn}
+            data-testid="end-turn-button"
+          >
+            End Turn
+          </button>
+        )}
       </footer>
     </div>
   )

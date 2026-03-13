@@ -41,13 +41,13 @@ export function LeaderboardView() {
   return (
     <div className={styles.leaderboardView}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Hall of Heroes</h1>
+        <h1 className={styles.title}>Hall of Wanderers</h1>
       </header>
 
       <main className={styles.content}>
         {leaderboard.length === 0 ? (
           <p className={styles.empty} data-testid="leaderboard-empty">
-            No heroes have been recorded yet. Complete a quest or retire to be remembered!
+            No wanderers have been recorded yet. Complete a quest or retire to be remembered!
           </p>
         ) : (
           <ol className={styles.list} data-testid="leaderboard-list">

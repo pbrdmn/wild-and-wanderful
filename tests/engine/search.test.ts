@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { search } from '../../src/engine/search'
 import type { Player, World, Tile } from '../../src/engine/types'
-import { TerrainType, DEFAULT_MAX_AP, AP_COST_SEARCH } from '../../src/engine/types'
+import { TerrainType, DEFAULT_MAX_AP } from '../../src/engine/types'
 import { createRng } from '../../src/engine/random'
 
 function makeTile(x: number, y: number, overrides: Partial<Tile> = {}): Tile {
@@ -47,22 +47,21 @@ function makeRngReturning(values: number[]): () => number {
 }
 
 describe('search', () => {
-  it('deducts AP on successful search', () => {
+  it('succeeds without deducting AP (exploration is free)', () => {
     const player = makePlayer()
     const world = makeSmallWorld()
     const rng = makeRngReturning([0.5])
     const result = search(player, world, rng)
     expect(result.success).toBe(true)
-    expect(result.player.ap).toBe(DEFAULT_MAX_AP - AP_COST_SEARCH)
+    expect(result.player.ap).toBe(DEFAULT_MAX_AP)
   })
 
-  it('fails when player has insufficient AP', () => {
+  it('succeeds even when player has no AP', () => {
     const player = makePlayer({ ap: 0 })
     const world = makeSmallWorld()
     const rng = makeRngReturning([0.5])
     const result = search(player, world, rng)
-    expect(result.success).toBe(false)
-    expect(result.reason).toContain('AP')
+    expect(result.success).toBe(true)
     expect(result.player.ap).toBe(0)
   })
 

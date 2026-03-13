@@ -19,8 +19,17 @@ describe('MapView', () => {
     expect(grid).toBeInTheDocument()
   })
 
-  it('renders the correct number of tiles', () => {
+  it('renders zoomed viewport by default (5x5 or fewer tiles)', () => {
     render(<MapView />)
+    const tiles = screen.getAllByTestId(/^tile-\d+-\d+$/)
+    expect(tiles.length).toBeLessThanOrEqual(25)
+    expect(tiles.length).toBeGreaterThan(0)
+  })
+
+  it('renders all tiles when zoom is toggled off', async () => {
+    const user = userEvent.setup()
+    render(<MapView />)
+    await user.click(screen.getByTestId('zoom-toggle'))
     const totalTiles = DEFAULT_WORLD_SIZE * DEFAULT_WORLD_SIZE
     const tiles = screen.getAllByTestId(/^tile-\d+-\d+$/)
     expect(tiles.length).toBe(totalTiles)
@@ -58,9 +67,9 @@ describe('MapView', () => {
     expect(playerTile.getAttribute('data-explored')).toBe('true')
   })
 
-  it('displays AP', () => {
+  it('does not display AP on map (exploration is free)', () => {
     render(<MapView />)
-    expect(screen.getByTestId('map-ap-display').textContent).toContain('AP:')
+    expect(screen.queryByTestId('map-ap-display')).not.toBeInTheDocument()
   })
 
   it('shows both Travel and Close Map buttons', () => {
@@ -132,7 +141,7 @@ describe('MapView', () => {
     const updated = useGameStore.getState()
     expect(updated.player.x).toBe(target.x)
     expect(updated.player.y).toBe(target.y)
-    expect(updated.player.ap).toBe(player.ap - 1)
+    expect(updated.player.ap).toBe(player.ap)
     expect(updated.view).toBe('scene')
   })
 

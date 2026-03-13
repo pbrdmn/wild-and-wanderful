@@ -28,10 +28,9 @@ describe('SceneView', () => {
     expect(desc.textContent!.length).toBeGreaterThan(10)
   })
 
-  it('displays AP and turn number', () => {
+  it('hides AP display during exploration', () => {
     render(<SceneView />)
-    expect(screen.getByTestId('ap-display').textContent).toContain('AP:')
-    expect(screen.getByTestId('turn-display').textContent).toContain('Turn 1')
+    expect(screen.queryByTestId('ap-display')).not.toBeInTheDocument()
   })
 
   it('displays wound count', () => {
@@ -52,9 +51,9 @@ describe('SceneView', () => {
     expect(screen.getByTestId('open-map-button')).toBeInTheDocument()
   })
 
-  it('has an End Turn button', () => {
+  it('hides End Turn button during exploration', () => {
     render(<SceneView />)
-    expect(screen.getByTestId('end-turn-button')).toBeInTheDocument()
+    expect(screen.queryByTestId('end-turn-button')).not.toBeInTheDocument()
   })
 
   it('has a Search button', () => {
@@ -86,13 +85,23 @@ describe('SceneView', () => {
     expect(useGameStore.getState().view).toBe('inventory')
   })
 
-  it('increments turn and resets AP when End Turn is clicked', async () => {
-    const user = userEvent.setup()
+  it('shows End Turn button and AP display during combat', () => {
+    const enemy: ActiveEnemy = {
+      name: 'Test',
+      strength: 1,
+      hp: 2,
+      maxHp: 2,
+      hasInitiative: false,
+      statusEffects: [],
+    }
+    useGameStore.setState({
+      gamePhase: 'combat',
+      activeEnemy: enemy,
+      combatLog: [],
+    })
     render(<SceneView />)
-    await user.click(screen.getByTestId('end-turn-button'))
-    const state = useGameStore.getState()
-    expect(state.turnNumber).toBe(2)
-    expect(state.player.ap).toBe(state.player.maxAp)
+    expect(screen.getByTestId('end-turn-button')).toBeInTheDocument()
+    expect(screen.getByTestId('ap-display')).toBeInTheDocument()
   })
 
   it('displays a game message when present', () => {
@@ -119,20 +128,20 @@ describe('SceneView', () => {
     expect(restButton).not.toBeDisabled()
   })
 
-  it('disables Search button when AP is 0', () => {
+  it('Search button is always enabled during exploration', () => {
     useGameStore.setState({
       player: { ...useGameStore.getState().player, ap: 0 },
     })
     render(<SceneView />)
     const searchButton = screen.getByTestId('search-button')
-    expect(searchButton).toBeDisabled()
+    expect(searchButton).not.toBeDisabled()
   })
 
-  it('deducts AP when Search is clicked', async () => {
+  it('does not deduct AP when Search is clicked', async () => {
     const user = userEvent.setup()
     render(<SceneView />)
     await user.click(screen.getByTestId('search-button'))
-    expect(useGameStore.getState().player.ap).toBe(DEFAULT_MAX_AP - 1)
+    expect(useGameStore.getState().player.ap).toBe(DEFAULT_MAX_AP)
   })
 
   it('heals wound when Rest is clicked with wounds', async () => {
