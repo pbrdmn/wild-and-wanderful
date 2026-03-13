@@ -11,6 +11,7 @@ function makePlayer(overrides: Partial<Player> = {}): Player {
     name: 'Test', level: 1,
     wounds: 0, maxWounds: 1,
     inventory: { items: [], equippedItemId: null, maxSlots: 5 },
+    unlockedSkillIds: [], activeSkillIds: [], maxActiveSkills: 2,
     ...overrides,
   }
 }
