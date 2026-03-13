@@ -38,6 +38,7 @@ function makeSaveData(): SaveData {
       ap: DEFAULT_MAX_AP, maxAp: DEFAULT_MAX_AP,
       name: 'Tester', level: 1,
       wounds: 0, maxWounds: 1,
+      inventory: { items: [], equippedItemId: null, maxSlots: 5 },
     },
     turnNumber: 5,
     gamePhase: 'exploring',
