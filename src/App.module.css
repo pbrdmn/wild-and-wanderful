@@ -25,3 +25,13 @@
   min-height: 100dvh;
   flex-shrink: 0;
 }
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  color: var(--color-text-muted);
+}

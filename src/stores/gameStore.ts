@@ -8,11 +8,15 @@ import { rest as engineRest } from '../engine/rest'
 import { search as engineSearch } from '../engine/search'
 import { getTileDescription, getPeripheralGlimpse } from '../engine/biomes'
 import { createRng } from '../engine/random'
+import { debouncedSave, loadGame, clearSave } from '../utils/persistence'
+import type { SaveData } from '../utils/persistence'
 
 export type ViewMode = 'scene' | 'map'
 
 interface GameActions {
   initGame: (seed?: number) => void
+  loadSavedGame: () => Promise<boolean>
+  newGame: (seed?: number) => void
   movePlayer: (x: number, y: number) => boolean
   endTurn: () => void
   setView: (view: ViewMode) => void
@@ -31,6 +35,7 @@ interface GameStore extends GameState, GameActions, GameDerived {
   view: ViewMode
   message: string | null
   gameSeed: number
+  loaded: boolean
 }
 
 function createInitialPlayer(world: World): Player {
@@ -64,6 +69,7 @@ export const useGameStore = create<GameStore>((set, get) => {
     view: 'scene' as ViewMode,
     message: null,
     gameSeed: defaultSeed,
+    loaded: false,
 
     initGame: (seed?: number) => {
       const actualSeed = seed ?? Date.now()
@@ -79,7 +85,33 @@ export const useGameStore = create<GameStore>((set, get) => {
         view: 'scene',
         message: 'A new adventure begins...',
         gameSeed: actualSeed,
+        loaded: true,
       })
+    },
+
+    loadSavedGame: async () => {
+      const save = await loadGame()
+      if (!save) {
+        return false
+      }
+      actionRng = createRng(save.gameSeed + 1 + save.turnNumber)
+      set({
+        world: save.world,
+        player: save.player,
+        turnNumber: save.turnNumber,
+        gamePhase: save.gamePhase,
+        activeEnemy: save.activeEnemy,
+        gameSeed: save.gameSeed,
+        view: 'scene',
+        message: 'Welcome back, wanderer.',
+        loaded: true,
+      })
+      return true
+    },
+
+    newGame: (seed?: number) => {
+      clearSave()
+      get().initGame(seed)
     },
 
     movePlayer: (x: number, y: number): boolean => {
@@ -199,5 +231,22 @@ export const useGameStore = create<GameStore>((set, get) => {
       const { player, world } = get()
       return getAdjacentTiles(player.x, player.y, world).filter((a) => canMoveTo(a.tile))
     },
+  }
+})
+
+function extractSaveData(state: GameStore): SaveData {
+  return {
+    world: state.world,
+    player: state.player,
+    turnNumber: state.turnNumber,
+    gamePhase: state.gamePhase,
+    activeEnemy: state.activeEnemy,
+    gameSeed: state.gameSeed,
+  }
+}
+
+useGameStore.subscribe((state) => {
+  if (state.loaded) {
+    debouncedSave(extractSaveData(state))
   }
 })

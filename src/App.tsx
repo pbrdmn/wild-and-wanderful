@@ -6,11 +6,27 @@ import styles from './App.module.css'
 
 function App() {
   const view = useGameStore((s) => s.view)
+  const loaded = useGameStore((s) => s.loaded)
+  const loadSavedGame = useGameStore((s) => s.loadSavedGame)
   const initGame = useGameStore((s) => s.initGame)
 
   useEffect(() => {
-    initGame()
-  }, [initGame])
+    loadSavedGame().then((restored) => {
+      if (!restored) {
+        initGame()
+      }
+    })
+  }, [loadSavedGame, initGame])
+
+  if (!loaded) {
+    return (
+      <div className={styles.app}>
+        <div className={styles.loading} data-testid="loading">
+          Loading...
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className={styles.app}>
