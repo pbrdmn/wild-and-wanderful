@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { SceneView } from '../../src/components/SceneView'
 import { useGameStore } from '../../src/stores/gameStore'
+import { DEFAULT_MAX_AP } from '../../src/engine/types'
 
 describe('SceneView', () => {
   const TEST_SEED = 42
@@ -24,6 +25,13 @@ describe('SceneView', () => {
     expect(screen.getByTestId('turn-display').textContent).toContain('Turn 1')
   })
 
+  it('displays wound count', () => {
+    render(<SceneView />)
+    const wounds = screen.getByTestId('wounds-display')
+    expect(wounds.textContent).toContain('Wounds:')
+    expect(wounds.textContent).toContain('0/1')
+  })
+
   it('shows peripheral glimpses', () => {
     render(<SceneView />)
     const glimpses = screen.getByTestId('peripheral-glimpses')
@@ -38,6 +46,16 @@ describe('SceneView', () => {
   it('has an End Turn button', () => {
     render(<SceneView />)
     expect(screen.getByTestId('end-turn-button')).toBeInTheDocument()
+  })
+
+  it('has a Search button', () => {
+    render(<SceneView />)
+    expect(screen.getByTestId('search-button')).toBeInTheDocument()
+  })
+
+  it('has a Rest button', () => {
+    render(<SceneView />)
+    expect(screen.getByTestId('rest-button')).toBeInTheDocument()
   })
 
   it('switches to map view when Open Map is clicked', async () => {
@@ -63,5 +81,46 @@ describe('SceneView', () => {
     if (msg) {
       expect(msg.textContent).toBeTruthy()
     }
+  })
+
+  it('disables Rest button when player has no wounds', () => {
+    render(<SceneView />)
+    const restButton = screen.getByTestId('rest-button')
+    expect(restButton).toBeDisabled()
+  })
+
+  it('enables Rest button when player has wounds', () => {
+    useGameStore.setState({
+      player: { ...useGameStore.getState().player, wounds: 1 },
+    })
+    render(<SceneView />)
+    const restButton = screen.getByTestId('rest-button')
+    expect(restButton).not.toBeDisabled()
+  })
+
+  it('disables Search button when AP is 0', () => {
+    useGameStore.setState({
+      player: { ...useGameStore.getState().player, ap: 0 },
+    })
+    render(<SceneView />)
+    const searchButton = screen.getByTestId('search-button')
+    expect(searchButton).toBeDisabled()
+  })
+
+  it('deducts AP when Search is clicked', async () => {
+    const user = userEvent.setup()
+    render(<SceneView />)
+    await user.click(screen.getByTestId('search-button'))
+    expect(useGameStore.getState().player.ap).toBe(DEFAULT_MAX_AP - 1)
+  })
+
+  it('heals wound when Rest is clicked with wounds', async () => {
+    const user = userEvent.setup()
+    useGameStore.setState({
+      player: { ...useGameStore.getState().player, wounds: 1 },
+    })
+    render(<SceneView />)
+    await user.click(screen.getByTestId('rest-button'))
+    expect(useGameStore.getState().player.wounds).toBe(0)
   })
 })
