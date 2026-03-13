@@ -18,7 +18,7 @@ const BACK_SPRITE_CONFIG: Record<AnimalSpeciesType, { col: number; row: number; 
 }
 
 function getBackSpriteStyle(species: AnimalSpeciesType): React.CSSProperties {
-  const cfg = BACK_SPRITE_CONFIG[species]
+  const cfg = BACK_SPRITE_CONFIG[species] ?? BACK_SPRITE_CONFIG.fox
   const bgSize = `${cfg.cols * 100}% 200%`
   const posX = cfg.cols > 1 ? (cfg.col / (cfg.cols - 1)) * 100 : 0
   const posY = cfg.row * 100

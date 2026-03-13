@@ -25,7 +25,7 @@ const SPRITE_CONFIG: Record<AnimalSpeciesType, { col: number; row: number; cols:
 }
 
 function getSpriteStyle(species: AnimalSpeciesType, sheet: string): React.CSSProperties {
-  const cfg = SPRITE_CONFIG[species]
+  const cfg = SPRITE_CONFIG[species] ?? SPRITE_CONFIG.fox
   const bgSize = `${cfg.cols * 100}% 200%`
   const posX = cfg.cols > 1 ? (cfg.col / (cfg.cols - 1)) * 100 : 0
   const posY = cfg.row * 100
