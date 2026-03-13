@@ -3,7 +3,7 @@ import type { GameState, Item } from '../engine/types'
 
 const SAVE_KEY = 'game-save'
 
-export const CURRENT_SAVE_VERSION = 2
+export const CURRENT_SAVE_VERSION = 3
 
 export interface SaveData {
   world: GameState['world']
@@ -23,6 +23,18 @@ const migrations: Record<number, (data: any) => any> = {
     // Phase 3: backfill player.inventory for pre-Phase-3 saves
     if (!data.player.inventory) {
       data.player.inventory = { items: [], equippedItemId: null, maxSlots: 5 }
+    }
+    return data
+  },
+  2: (data) => {
+    // Phase 4: backfill player skill fields and ActiveEnemy combat fields
+    if (!data.player.unlockedSkillIds) data.player.unlockedSkillIds = []
+    if (!data.player.activeSkillIds) data.player.activeSkillIds = []
+    if (data.player.maxActiveSkills === undefined) data.player.maxActiveSkills = 2
+    if (data.activeEnemy) {
+      if (data.activeEnemy.hp === undefined) data.activeEnemy.hp = data.activeEnemy.strength
+      if (data.activeEnemy.maxHp === undefined) data.activeEnemy.maxHp = data.activeEnemy.strength
+      if (!data.activeEnemy.statusEffects) data.activeEnemy.statusEffects = []
     }
     return data
   },

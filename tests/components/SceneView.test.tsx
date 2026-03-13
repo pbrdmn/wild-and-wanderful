@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { SceneView } from '../../src/components/SceneView'
 import { useGameStore } from '../../src/stores/gameStore'
 import { DEFAULT_MAX_AP } from '../../src/engine/types'
+import type { ActiveEnemy } from '../../src/engine/types'
 
 function initAndSkipIntro(seed: number) {
   useGameStore.getState().initGame(seed)
@@ -164,5 +165,127 @@ describe('SceneView', () => {
     })
     render(<SceneView />)
     expect(screen.queryByTestId('equipped-display')).not.toBeInTheDocument()
+  })
+
+  it('has a Skills button', () => {
+    render(<SceneView />)
+    expect(screen.getByTestId('open-skills-button')).toBeInTheDocument()
+  })
+
+  it('switches to skills view when Skills is clicked', async () => {
+    const user = userEvent.setup()
+    render(<SceneView />)
+    await user.click(screen.getByTestId('open-skills-button'))
+    expect(useGameStore.getState().view).toBe('skills')
+  })
+
+  describe('combat UI', () => {
+    function enterCombat() {
+      const enemy: ActiveEnemy = {
+        name: 'Shadow Wolf',
+        strength: 1,
+        hp: 2,
+        maxHp: 2,
+        hasInitiative: false,
+        statusEffects: [],
+      }
+      useGameStore.setState({
+        gamePhase: 'combat',
+        activeEnemy: enemy,
+        combatLog: ['A Shadow Wolf appears!'],
+      })
+    }
+
+    it('shows the combat panel when in combat', () => {
+      enterCombat()
+      render(<SceneView />)
+      expect(screen.getByTestId('combat-panel')).toBeInTheDocument()
+    })
+
+    it('displays enemy name and HP bar', () => {
+      enterCombat()
+      render(<SceneView />)
+      expect(screen.getByTestId('enemy-info').textContent).toContain('Shadow Wolf')
+      expect(screen.getByTestId('enemy-hp-bar')).toBeInTheDocument()
+    })
+
+    it('shows attack and flee buttons in combat', () => {
+      enterCombat()
+      render(<SceneView />)
+      expect(screen.getByTestId('attack-button')).toBeInTheDocument()
+      expect(screen.getByTestId('flee-button')).toBeInTheDocument()
+    })
+
+    it('shows combat log entries', () => {
+      enterCombat()
+      render(<SceneView />)
+      const log = screen.getByTestId('combat-log')
+      expect(log.textContent).toContain('Shadow Wolf appears')
+    })
+
+    it('hides exploration actions during combat', () => {
+      enterCombat()
+      render(<SceneView />)
+      expect(screen.queryByTestId('open-map-button')).not.toBeInTheDocument()
+      expect(screen.queryByTestId('search-button')).not.toBeInTheDocument()
+      expect(screen.queryByTestId('rest-button')).not.toBeInTheDocument()
+    })
+
+    it('keeps end turn button during combat', () => {
+      enterCombat()
+      render(<SceneView />)
+      expect(screen.getByTestId('end-turn-button')).toBeInTheDocument()
+    })
+
+    it('hides peripheral glimpses during combat', () => {
+      enterCombat()
+      render(<SceneView />)
+      expect(screen.queryByTestId('peripheral-glimpses')).not.toBeInTheDocument()
+    })
+
+    it('shows combat actions container', () => {
+      enterCombat()
+      render(<SceneView />)
+      expect(screen.getByTestId('combat-actions')).toBeInTheDocument()
+    })
+
+    it('disables attack when no weapon equipped', () => {
+      enterCombat()
+      useGameStore.setState({
+        player: {
+          ...useGameStore.getState().player,
+          inventory: { items: [], equippedItemId: null, maxSlots: 5 },
+        },
+      })
+      render(<SceneView />)
+      expect(screen.getByTestId('attack-button')).toBeDisabled()
+    })
+
+    it('disables attack when no AP', () => {
+      enterCombat()
+      useGameStore.setState({
+        player: { ...useGameStore.getState().player, ap: 0 },
+      })
+      render(<SceneView />)
+      expect(screen.getByTestId('attack-button')).toBeDisabled()
+    })
+
+    it('shows enemy status effects', () => {
+      const enemy: ActiveEnemy = {
+        name: 'Test',
+        strength: 1,
+        hp: 2,
+        maxHp: 2,
+        hasInitiative: false,
+        statusEffects: [{ type: 'daze', remainingTurns: 1 }],
+      }
+      useGameStore.setState({
+        gamePhase: 'combat',
+        activeEnemy: enemy,
+        combatLog: [],
+      })
+      render(<SceneView />)
+      expect(screen.getByTestId('enemy-status-effects')).toBeInTheDocument()
+    })
   })
 })

@@ -4,6 +4,7 @@ import { SceneView } from './components/SceneView'
 import { MapView } from './components/MapView'
 import { IntroView } from './components/IntroView'
 import { InventoryView } from './components/InventoryView'
+import { SkillsView } from './components/SkillsView'
 import styles from './App.module.css'
 
 function App() {
@@ -44,6 +45,10 @@ function App() {
       {view === 'inventory' ? (
         <div data-testid="inventory-screen">
           <InventoryView />
+        </div>
+      ) : view === 'skills' ? (
+        <div data-testid="skills-screen">
+          <SkillsView />
         </div>
       ) : (
         <div

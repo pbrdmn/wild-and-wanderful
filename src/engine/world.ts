@@ -1,6 +1,7 @@
 import type { Tile, World } from './types'
 import { TerrainType, DEFAULT_WORLD_SIZE } from './types'
 import { createRng, randomInt, pickRandom } from './random'
+import { placeEnemies } from './enemies'
 
 const PASSABLE_TERRAIN: TerrainType[] = [
   TerrainType.Forest,
@@ -152,6 +153,18 @@ export function generateWorld(
     if (tiles[vy][vx].terrain !== TerrainType.Village &&
         !(vx === questX && vy === questY)) {
       tiles[vy][vx].terrain = TerrainType.Village
+    }
+  }
+
+  // Sparse enemy placement (skip villages and starting area)
+  placeEnemies(tiles, width, height, rng)
+  // Clear enemies from the starting village and its immediate surroundings
+  tiles[startY][startX].enemyId = undefined
+  for (const [dx, dy] of [[0, -1], [1, 0], [0, 1], [-1, 0]] as const) {
+    const nx = startX + dx
+    const ny = startY + dy
+    if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+      tiles[ny][nx].enemyId = undefined
     }
   }
 

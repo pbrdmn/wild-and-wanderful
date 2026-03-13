@@ -24,6 +24,7 @@ export interface Tile {
   terrain: TerrainType
   isExplored: boolean
   hasHiddenPath: boolean
+  enemyId?: string
 }
 
 export interface World {
@@ -66,6 +67,9 @@ export interface Player {
   wounds: number
   maxWounds: number
   inventory: Inventory
+  unlockedSkillIds: string[]
+  activeSkillIds: string[]
+  maxActiveSkills: number
 }
 
 export interface Enemy {
@@ -73,8 +77,36 @@ export interface Enemy {
   strength: number
 }
 
+export type StatusEffectType = 'daze' | 'poison' | 'shield'
+
+export interface StatusEffect {
+  type: StatusEffectType
+  remainingTurns: number
+}
+
+export type SkillCategory = 'offensive' | 'defensive' | 'utility'
+
+export type SkillEffect =
+  | { type: 'damage'; power: number }
+  | { type: 'damage_status'; power: number; statusEffect: StatusEffectType; duration: number }
+  | { type: 'status'; statusEffect: StatusEffectType; duration: number }
+  | { type: 'dodge_next'; chance: number }
+
+export interface Skill {
+  id: string
+  name: string
+  description: string
+  skillCategory: SkillCategory
+  requiredItemCategory: ItemCategory
+  apCost: number
+  effect: SkillEffect
+}
+
 export interface ActiveEnemy extends Enemy {
+  hp: number
+  maxHp: number
   hasInitiative: boolean
+  statusEffects: StatusEffect[]
 }
 
 export type GamePhase = 'intro' | 'exploring' | 'combat' | 'resting'
@@ -110,8 +142,12 @@ export const AP_COST_REST = 1
 export const AP_COST_SEARCH = 1
 
 export const AP_COST_SWAP = DEFAULT_MAX_AP
+export const AP_COST_ATTACK = 1
+export const AP_COST_FLEE = 1
 
 export const AMBUSH_CHANCE = 0.1
+export const BASE_FLEE_CHANCE = 0.7
 export const SEARCH_REVEAL_CHANCE = 0.3
 
 export const DEFAULT_INVENTORY_SLOTS = 5
+export const DEFAULT_MAX_ACTIVE_SKILLS = 2
