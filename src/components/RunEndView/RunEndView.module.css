@@ -1,0 +1,117 @@
+.runEndView {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  padding: var(--spacing-md);
+  padding-bottom: env(safe-area-inset-bottom, var(--spacing-md));
+}
+
+.header {
+  text-align: center;
+  padding: var(--spacing-xl) 0 var(--spacing-lg);
+}
+
+.title {
+  font-size: 1.8rem;
+  color: var(--color-forest-dark);
+  letter-spacing: 0.04em;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
+
+.heroSprite {
+  width: 96px;
+  height: 96px;
+  image-rendering: pixelated;
+  border-radius: var(--radius-md);
+  border: 3px solid var(--color-forest);
+}
+
+.heroInfo {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.heroName {
+  font-size: 1.4rem;
+  color: var(--color-forest-dark);
+  margin: 0;
+}
+
+.heroSpecies {
+  font-size: 0.9rem;
+  font-style: italic;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.stats {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-md);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.equippedInfo {
+  font-size: 0.85rem;
+  color: var(--color-accent-dark);
+  margin: 0;
+}
+
+.outcome {
+  font-size: 1.05rem;
+  line-height: 1.8;
+  text-align: center;
+  color: var(--color-text);
+  padding: var(--spacing-md);
+  background-color: var(--color-parchment-dark);
+  border-radius: var(--radius-md);
+  max-width: 400px;
+}
+
+.actions {
+  display: flex;
+  gap: var(--spacing-md);
+  padding-top: var(--spacing-lg);
+  margin-top: auto;
+}
+
+.actionButton {
+  flex: 1;
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-forest-dark);
+  background-color: transparent;
+  border: 2px solid var(--color-parchment-dark);
+  border-radius: var(--radius-md);
+  transition: border-color 150ms ease, transform 100ms ease;
+  min-height: 48px;
+  cursor: pointer;
+}
+
+.actionButton:active {
+  border-color: var(--color-forest);
+  transform: scale(0.97);
+}
+
+.newGameButton {
+  color: var(--color-parchment);
+  background-color: var(--color-forest);
+  border-color: var(--color-forest);
+}
+
+.newGameButton:active {
+  background-color: var(--color-forest-dark);
+}

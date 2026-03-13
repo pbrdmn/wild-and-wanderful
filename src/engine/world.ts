@@ -1,7 +1,8 @@
-import type { Tile, World } from './types'
+import type { Tile, World, LeaderboardEntry } from './types'
 import { TerrainType, DEFAULT_WORLD_SIZE } from './types'
 import { createRng, randomInt, pickRandom } from './random'
 import { placeEnemies } from './enemies'
+import { selectLegacyNpcs, placeLegacyNpcs } from './legacy'
 
 const PASSABLE_TERRAIN: TerrainType[] = [
   TerrainType.Forest,
@@ -103,6 +104,7 @@ function placeRiver(
 export function generateWorld(
   seed: number,
   size: number = DEFAULT_WORLD_SIZE,
+  leaderboard: LeaderboardEntry[] = [],
 ): World {
   const rng = createRng(seed)
   const width = size
@@ -166,6 +168,11 @@ export function generateWorld(
     if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
       tiles[ny][nx].enemyId = undefined
     }
+  }
+
+  if (leaderboard.length > 0) {
+    const legacyNpcs = selectLegacyNpcs(leaderboard, rng)
+    placeLegacyNpcs(tiles, width, height, legacyNpcs, rng)
   }
 
   return {

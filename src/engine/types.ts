@@ -18,6 +18,27 @@ export const IMPASSABLE_TERRAIN: ReadonlySet<TerrainType> = new Set([
   TerrainType.Thicket,
 ])
 
+export const AnimalSpecies = {
+  Fox: 'fox',
+  Bear: 'bear',
+  Mouse: 'mouse',
+  Raccoon: 'raccoon',
+  Cat: 'cat',
+  Bird: 'bird',
+  Frog: 'frog',
+} as const
+
+export type AnimalSpecies = (typeof AnimalSpecies)[keyof typeof AnimalSpecies]
+
+export interface LegacyNpc {
+  name: string
+  species: AnimalSpecies
+  level: number
+  questCompleted: boolean
+  tileX: number
+  tileY: number
+}
+
 export interface Tile {
   x: number
   y: number
@@ -25,6 +46,7 @@ export interface Tile {
   isExplored: boolean
   hasHiddenPath: boolean
   enemyId?: string
+  legacyNpc?: LegacyNpc
 }
 
 export interface World {
@@ -63,7 +85,9 @@ export interface Player {
   ap: number
   maxAp: number
   name: string
+  species: AnimalSpecies
   level: number
+  xp: number
   wounds: number
   maxWounds: number
   inventory: Inventory
@@ -109,7 +133,19 @@ export interface ActiveEnemy extends Enemy {
   statusEffects: StatusEffect[]
 }
 
-export type GamePhase = 'intro' | 'exploring' | 'combat' | 'resting'
+export type GamePhase = 'intro' | 'exploring' | 'combat' | 'resting' | 'questComplete' | 'retired'
+
+export interface LeaderboardEntry {
+  id: string
+  name: string
+  species: AnimalSpecies
+  level: number
+  xp: number
+  turnsSurvived: number
+  questCompleted: boolean
+  equippedItemName: string | null
+  date: number
+}
 
 export interface GameState {
   world: World
@@ -151,3 +187,6 @@ export const SEARCH_REVEAL_CHANCE = 0.3
 
 export const DEFAULT_INVENTORY_SLOTS = 5
 export const DEFAULT_MAX_ACTIVE_SKILLS = 2
+
+export const XP_LEVEL_THRESHOLDS = [0, 3, 8, 15, 25] as const
+export const MAX_LEADERBOARD_ENTRIES = 50

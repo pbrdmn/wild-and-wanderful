@@ -1,7 +1,13 @@
 import { useGameStore } from '../../stores/gameStore'
 import { getBiomeData } from '../../engine/biomes'
 import { AP_COST_REST, AP_COST_SEARCH, AP_COST_ATTACK, AP_COST_FLEE } from '../../engine/types'
+import type { AnimalSpecies as AnimalSpeciesType } from '../../engine/types'
 import styles from './SceneView.module.css'
+
+const SPECIES_LABELS: Record<AnimalSpeciesType, string> = {
+  fox: 'Fox', bear: 'Bear', mouse: 'Mouse', raccoon: 'Raccoon',
+  cat: 'Cat', bird: 'Bird', frog: 'Frog',
+}
 
 function StatusEffectIcon({ type }: { type: string }) {
   const labels: Record<string, string> = {
@@ -27,6 +33,7 @@ export function SceneView() {
   const attack = useGameStore((s) => s.attack)
   const useSkill = useGameStore((s) => s.useSkill)
   const flee = useGameStore((s) => s.flee)
+  const retire = useGameStore((s) => s.retire)
   const currentTileDescription = useGameStore((s) => s.currentTileDescription)
   const peripheralGlimpses = useGameStore((s) => s.peripheralGlimpses)
   const equippedItem = useGameStore((s) => s.equippedItem)
@@ -58,6 +65,8 @@ export function SceneView() {
             <span className={styles.wounds} data-testid="wounds-display">
               Wounds: {player.wounds}/{player.maxWounds}
             </span>
+            <span className={styles.level} data-testid="level-display">Lv {player.level}</span>
+            <span className={styles.xp} data-testid="xp-display">XP: {player.xp}</span>
             <span className={styles.turn} data-testid="turn-display">
               Turn {turnNumber}
             </span>
@@ -74,6 +83,19 @@ export function SceneView() {
         <p className={styles.description} data-testid="tile-description">
           {description}
         </p>
+
+        {currentTile.legacyNpc && !inCombat && (
+          <div className={styles.legacyNpc} data-testid="legacy-npc">
+            <p>
+              You meet <strong>{currentTile.legacyNpc.name}</strong> the{' '}
+              {SPECIES_LABELS[currentTile.legacyNpc.species]}, a retired adventurer who{' '}
+              {currentTile.legacyNpc.questCompleted
+                ? 'completed the great quest'
+                : 'retired peacefully'}.
+              They share a tale of their journey.
+            </p>
+          </div>
+        )}
 
         {!inCombat && (
           <div className={styles.glimpses} data-testid="peripheral-glimpses">
@@ -195,6 +217,13 @@ export function SceneView() {
               data-testid="rest-button"
             >
               Rest
+            </button>
+            <button
+              className={`${styles.actionButton} ${styles.retireButton}`}
+              onClick={retire}
+              data-testid="retire-button"
+            >
+              Retire
             </button>
           </>
         )}
