@@ -35,7 +35,7 @@ export function createActiveEnemy(template: EnemyTemplate, hasInitiative: boolea
   }
 }
 
-const ENEMY_PLACEMENT_CHANCE = 0.12
+const ENEMY_PLACEMENT_CHANCE = 0.18
 
 export function placeEnemies(
   tiles: Tile[][],

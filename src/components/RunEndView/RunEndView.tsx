@@ -32,7 +32,7 @@ function getBackSpriteStyle(species: AnimalSpeciesType): React.CSSProperties {
 
 export function RunEndView() {
   const player = useGameStore((s) => s.player)
-  const turnNumber = useGameStore((s) => s.turnNumber)
+  const combatRounds = useGameStore((s) => s.combatRounds)
   const gamePhase = useGameStore((s) => s.gamePhase)
   const setView = useGameStore((s) => s.setView)
   const newGame = useGameStore((s) => s.newGame)
@@ -51,18 +51,18 @@ export function RunEndView() {
 
       <main className={styles.content}>
         <div
-          className={styles.heroSprite}
+          className={styles.wandererSprite}
           style={getBackSpriteStyle(player.species)}
-          data-testid="hero-sprite"
+          data-testid="wanderer-sprite"
         />
 
-        <div className={styles.heroInfo} data-testid="hero-summary">
-          <h2 className={styles.heroName}>{player.name}</h2>
-          <p className={styles.heroSpecies}>{SPECIES_LABELS[player.species]}</p>
+        <div className={styles.wandererInfo} data-testid="wanderer-summary">
+          <h2 className={styles.wandererName}>{player.name}</h2>
+          <p className={styles.wandererSpecies}>{SPECIES_LABELS[player.species]}</p>
           <div className={styles.stats}>
             <span>Level {player.level}</span>
             <span>{player.xp} XP</span>
-            <span>{turnNumber} Turns</span>
+            <span>{combatRounds} Rounds</span>
           </div>
           {equipped && (
             <p className={styles.equippedInfo}>Wielding: {equipped.name}</p>

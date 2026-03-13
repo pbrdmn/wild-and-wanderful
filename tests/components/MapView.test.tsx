@@ -72,15 +72,10 @@ describe('MapView', () => {
     expect(screen.queryByTestId('map-ap-display')).not.toBeInTheDocument()
   })
 
-  it('shows both Travel and Close Map buttons', () => {
+  it('shows only a Close Map button', () => {
     render(<MapView />)
-    expect(screen.getByTestId('travel-button')).toBeInTheDocument()
+    expect(screen.queryByTestId('travel-button')).not.toBeInTheDocument()
     expect(screen.getByTestId('close-map-button')).toBeInTheDocument()
-  })
-
-  it('Travel button is disabled when no tile is selected', () => {
-    render(<MapView />)
-    expect(screen.getByTestId('travel-button')).toBeDisabled()
   })
 
   it('switches to scene view when Close Map is clicked', async () => {
@@ -90,74 +85,22 @@ describe('MapView', () => {
     expect(useGameStore.getState().view).toBe('scene')
   })
 
-  it('enables Travel button after selecting a movable tile', async () => {
+  it('moves the player and closes the map immediately on tile click', async () => {
     const user = userEvent.setup()
     render(<MapView />)
 
+    const { player } = useGameStore.getState()
     const movable = useGameStore.getState().movableTiles()
     expect(movable.length).toBeGreaterThan(0)
 
     const target = movable[0].tile
     await user.click(screen.getByTestId(`tile-${target.x}-${target.y}`))
 
-    expect(screen.getByTestId('travel-button')).toBeEnabled()
-  })
-
-  it('disables Travel when the player selects their current tile', async () => {
-    const user = userEvent.setup()
-    render(<MapView />)
-
-    const { player } = useGameStore.getState()
-    await user.click(screen.getByTestId(`tile-${player.x}-${player.y}`))
-
-    expect(screen.getByTestId('travel-button')).toBeDisabled()
-  })
-
-  it('does not move the player until Travel is pressed', async () => {
-    const user = userEvent.setup()
-    render(<MapView />)
-
-    const { player } = useGameStore.getState()
-    const movable = useGameStore.getState().movableTiles()
-    const target = movable[0].tile
-    await user.click(screen.getByTestId(`tile-${target.x}-${target.y}`))
-
-    const afterSelect = useGameStore.getState()
-    expect(afterSelect.player.x).toBe(player.x)
-    expect(afterSelect.player.y).toBe(player.y)
-    expect(afterSelect.player.ap).toBe(player.ap)
-  })
-
-  it('moves the player and closes the map when Travel is pressed', async () => {
-    const user = userEvent.setup()
-    render(<MapView />)
-
-    const { player } = useGameStore.getState()
-    const movable = useGameStore.getState().movableTiles()
-    const target = movable[0].tile
-    await user.click(screen.getByTestId(`tile-${target.x}-${target.y}`))
-    await user.click(screen.getByTestId('travel-button'))
-
     const updated = useGameStore.getState()
     expect(updated.player.x).toBe(target.x)
     expect(updated.player.y).toBe(target.y)
     expect(updated.player.ap).toBe(player.ap)
     expect(updated.view).toBe('scene')
-  })
-
-  it('deselects the tile when clicking it again', async () => {
-    const user = userEvent.setup()
-    render(<MapView />)
-
-    const movable = useGameStore.getState().movableTiles()
-    const target = movable[0].tile
-    const tileEl = screen.getByTestId(`tile-${target.x}-${target.y}`)
-
-    await user.click(tileEl)
-    expect(screen.getByTestId('travel-button')).toBeEnabled()
-
-    await user.click(tileEl)
-    expect(screen.getByTestId('travel-button')).toBeDisabled()
   })
 
   it('does not move when clicking a non-adjacent tile', async () => {

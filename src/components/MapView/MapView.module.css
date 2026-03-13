@@ -161,13 +161,6 @@
   transform: scale(0.9);
 }
 
-.selected {
-  background-color: var(--color-accent) !important;
-  outline: 2px solid var(--color-accent-dark);
-  outline-offset: -2px;
-  animation: pulse 1.2s ease-in-out infinite;
-}
-
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.7; }
@@ -214,10 +207,3 @@
   cursor: default;
 }
 
-.travelButton {
-  background-color: var(--color-accent);
-}
-
-.travelButton:active:not(:disabled) {
-  background-color: var(--color-accent-dark);
-}

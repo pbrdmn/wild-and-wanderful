@@ -41,7 +41,7 @@ function makeSaveData(): SaveData {
       inventory: { items: [], equippedItemId: null, maxSlots: 5 },
       unlockedSkillIds: [], activeSkillIds: [], maxActiveSkills: 2,
     },
-    turnNumber: 5,
+    combatRounds: 5,
     gamePhase: 'exploring',
     activeEnemy: undefined,
     gameSeed: 12345,
@@ -107,7 +107,7 @@ describe('persistence', () => {
     await saveGame(data)
     const loaded = await loadGame()
     expect(loaded).not.toBeNull()
-    expect(loaded!.turnNumber).toBe(5)
+    expect(loaded!.combatRounds).toBe(5)
     expect(loaded!.player.name).toBe('Tester')
     expect(loaded!.gameSeed).toBe(12345)
   })
@@ -197,11 +197,27 @@ describe('persistence', () => {
       }
       delete (v3 as any).player.species
       delete (v3 as any).player.xp
+      ;(v3 as any).turnNumber = (v3 as any).combatRounds
+      delete (v3 as any).combatRounds
       const result = migrateSaveData(v3)
       expect(result).not.toBeNull()
       expect(result!.saveVersion).toBe(CURRENT_SAVE_VERSION)
       expect(result!.player.species).toBe('fox')
       expect(result!.player.xp).toBe(0)
+    })
+
+    it('migrates a v4 save to v5 (turnNumber to combatRounds)', () => {
+      const v4: Record<string, unknown> = {
+        ...makeSaveData(),
+        saveVersion: 4,
+      }
+      ;(v4 as any).turnNumber = (v4 as any).combatRounds
+      delete (v4 as any).combatRounds
+      const result = migrateSaveData(v4)
+      expect(result).not.toBeNull()
+      expect(result!.saveVersion).toBe(CURRENT_SAVE_VERSION)
+      expect(result!.combatRounds).toBe(5)
+      expect((result as any).turnNumber).toBeUndefined()
     })
   })
 

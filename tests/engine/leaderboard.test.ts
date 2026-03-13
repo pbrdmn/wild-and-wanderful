@@ -7,7 +7,7 @@ function makePlayer(overrides: Partial<Player> = {}): Player {
   return {
     x: 0, y: 0,
     ap: DEFAULT_MAX_AP, maxAp: DEFAULT_MAX_AP,
-    name: 'Hero', species: 'fox', level: 3, xp: 10,
+    name: 'Wanderer', species: 'fox', level: 3, xp: 10,
     wounds: 0, maxWounds: 3,
     inventory: { items: [], equippedItemId: null, maxSlots: 5 },
     unlockedSkillIds: [], activeSkillIds: [], maxActiveSkills: 2,
@@ -18,11 +18,11 @@ function makePlayer(overrides: Partial<Player> = {}): Player {
 function makeEntry(overrides: Partial<LeaderboardEntry> = {}): LeaderboardEntry {
   return {
     id: 'test-1',
-    name: 'Hero',
+    name: 'Wanderer',
     species: 'fox',
     level: 1,
     xp: 0,
-    turnsSurvived: 10,
+    combatRounds: 10,
     questCompleted: false,
     equippedItemName: null,
     date: Date.now(),
@@ -39,7 +39,7 @@ describe('leaderboard', () => {
       expect(entry.species).toBe('bear')
       expect(entry.level).toBe(3)
       expect(entry.xp).toBe(10)
-      expect(entry.turnsSurvived).toBe(25)
+      expect(entry.combatRounds).toBe(25)
       expect(entry.questCompleted).toBe(true)
       expect(entry.id).toBeTruthy()
     })

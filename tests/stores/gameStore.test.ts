@@ -37,10 +37,10 @@ describe('gameStore', () => {
       expect(player.ap).toBe(DEFAULT_MAX_AP)
     })
 
-    it('starts on turn 1 in intro phase before selection', () => {
+    it('starts with combatRounds 1 in intro phase before selection', () => {
       useGameStore.getState().initGame(TEST_SEED)
       const state = useGameStore.getState()
-      expect(state.turnNumber).toBe(1)
+      expect(state.combatRounds).toBe(1)
       expect(state.gamePhase).toBe('intro')
       expect(state.view).toBe('intro')
     })
@@ -99,12 +99,12 @@ describe('gameStore', () => {
 
   describe('endTurn', () => {
     it('does nothing outside combat', () => {
-      const turnBefore = useGameStore.getState().turnNumber
+      const roundsBefore = useGameStore.getState().combatRounds
       useGameStore.getState().endTurn()
-      expect(useGameStore.getState().turnNumber).toBe(turnBefore)
+      expect(useGameStore.getState().combatRounds).toBe(roundsBefore)
     })
 
-    it('resets AP and increments turn number during combat', () => {
+    it('resets AP and increments combat rounds during combat', () => {
       useGameStore.setState({
         gamePhase: 'combat',
         player: { ...useGameStore.getState().player, ap: 0 },
@@ -112,7 +112,7 @@ describe('gameStore', () => {
       useGameStore.getState().endTurn()
       const state = useGameStore.getState()
       expect(state.player.ap).toBe(DEFAULT_MAX_AP)
-      expect(state.turnNumber).toBe(2)
+      expect(state.combatRounds).toBe(2)
     })
   })
 

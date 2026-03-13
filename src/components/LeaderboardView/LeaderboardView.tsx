@@ -61,7 +61,7 @@ export function LeaderboardView() {
                 <div className={styles.entryInfo}>
                   <span className={styles.entryName}>{entry.name}</span>
                   <span className={styles.entryDetail}>
-                    {SPECIES_LABELS[entry.species]} · Lv {entry.level} · {entry.turnsSurvived} turns
+                    {SPECIES_LABELS[entry.species]} · Lv {entry.level} · {entry.combatRounds} rounds
                   </span>
                 </div>
                 <span className={`${styles.outcome} ${entry.questCompleted ? styles.quest : styles.retired}`}>

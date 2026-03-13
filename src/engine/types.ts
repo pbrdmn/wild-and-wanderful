@@ -46,6 +46,7 @@ export interface Tile {
   isExplored: boolean
   hasHiddenPath: boolean
   enemyId?: string
+  discoveryId?: string
   legacyNpc?: LegacyNpc
 }
 
@@ -141,7 +142,7 @@ export interface LeaderboardEntry {
   species: AnimalSpecies
   level: number
   xp: number
-  turnsSurvived: number
+  combatRounds: number
   questCompleted: boolean
   equippedItemName: string | null
   date: number
@@ -150,7 +151,7 @@ export interface LeaderboardEntry {
 export interface GameState {
   world: World
   player: Player
-  turnNumber: number
+  combatRounds: number
   gamePhase: GamePhase
   activeEnemy?: ActiveEnemy
 }
