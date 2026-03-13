@@ -16,11 +16,13 @@ export function SceneView() {
   const search = useGameStore((s) => s.search)
   const currentTileDescription = useGameStore((s) => s.currentTileDescription)
   const peripheralGlimpses = useGameStore((s) => s.peripheralGlimpses)
+  const equippedItem = useGameStore((s) => s.equippedItem)
 
   const currentTile = world.tiles[player.y][player.x]
   const biome = getBiomeData(currentTile.terrain)
   const description = currentTileDescription()
   const glimpses = peripheralGlimpses()
+  const equipped = equippedItem()
 
   const canAct = player.ap >= AP_COST_REST
   const canRest = canAct && player.wounds > 0
@@ -29,18 +31,25 @@ export function SceneView() {
   return (
     <div className={styles.sceneView}>
       <header className={styles.header}>
-        <h1 className={styles.title}>{biome.name}</h1>
-        <div className={styles.hud}>
-          <span className={styles.ap} data-testid="ap-display">
-            AP: {player.ap}/{player.maxAp}
-          </span>
-          <span className={styles.wounds} data-testid="wounds-display">
-            Wounds: {player.wounds}/{player.maxWounds}
-          </span>
-          <span className={styles.turn} data-testid="turn-display">
-            Turn {turnNumber}
-          </span>
+        <div className={styles.headerTop}>
+          <h1 className={styles.title}>{biome.name}</h1>
+          <div className={styles.hud}>
+            <span className={styles.ap} data-testid="ap-display">
+              AP: {player.ap}/{player.maxAp}
+            </span>
+            <span className={styles.wounds} data-testid="wounds-display">
+              Wounds: {player.wounds}/{player.maxWounds}
+            </span>
+            <span className={styles.turn} data-testid="turn-display">
+              Turn {turnNumber}
+            </span>
+          </div>
         </div>
+        {equipped && (
+          <div className={styles.equippedBar} data-testid="equipped-display">
+            <span className={styles.equippedLabel}>Wielding:</span> {equipped.name}
+          </div>
+        )}
       </header>
 
       <main className={styles.content}>
@@ -76,6 +85,13 @@ export function SceneView() {
           data-testid="open-map-button"
         >
           Map
+        </button>
+        <button
+          className={styles.actionButton}
+          onClick={() => setView('inventory')}
+          data-testid="open-inventory-button"
+        >
+          Pack
         </button>
         <button
           className={`${styles.actionButton} ${!canSearch ? styles.disabled : ''}`}
