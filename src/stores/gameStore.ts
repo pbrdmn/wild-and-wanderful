@@ -114,13 +114,9 @@ export const useGameStore = create<GameStore>((set, get) => {
         return false
       }
       actionRng = createRng(save.gameSeed + 1 + save.turnNumber)
-      // Phase 3 migration: backfill inventory for pre-Phase-3 saves (ADR 0007)
-      const player = save.player.inventory
-        ? save.player
-        : { ...save.player, inventory: { items: [], equippedItemId: null, maxSlots: 5 } }
       set({
         world: save.world,
-        player,
+        player: save.player,
         turnNumber: save.turnNumber,
         gamePhase: save.gamePhase,
         activeEnemy: save.activeEnemy,

@@ -47,10 +47,40 @@ function makeSaveData(): SaveData {
   }
 }
 
+function makeV1SaveData(): Record<string, unknown> {
+  return {
+    world: {
+      width: 3,
+      height: 3,
+      tiles: Array.from({ length: 3 }, (_, y) =>
+        Array.from({ length: 3 }, (_, x) => ({
+          x, y,
+          terrain: TerrainType.Meadow,
+          isExplored: false,
+          hasHiddenPath: false,
+        })),
+      ),
+      questMarker: { x: 2, y: 0 },
+    },
+    player: {
+      x: 1, y: 1,
+      ap: DEFAULT_MAX_AP, maxAp: DEFAULT_MAX_AP,
+      name: 'OldSave', level: 1,
+      wounds: 0, maxWounds: 1,
+    },
+    turnNumber: 3,
+    gamePhase: 'exploring',
+    activeEnemy: undefined,
+    gameSeed: 99999,
+  }
+}
+
 describe('persistence', () => {
   let saveGame: typeof import('../../src/utils/persistence').saveGame
   let loadGame: typeof import('../../src/utils/persistence').loadGame
   let clearSave: typeof import('../../src/utils/persistence').clearSave
+  let migrateSaveData: typeof import('../../src/utils/persistence').migrateSaveData
+  let CURRENT_SAVE_VERSION: number
   let mockStore: Map<string, unknown>
 
   beforeEach(async () => {
@@ -67,6 +97,8 @@ describe('persistence', () => {
     saveGame = mod.saveGame
     loadGame = mod.loadGame
     clearSave = mod.clearSave
+    migrateSaveData = mod.migrateSaveData
+    CURRENT_SAVE_VERSION = mod.CURRENT_SAVE_VERSION
   })
 
   it('saves and loads game data round-trip', async () => {
@@ -97,5 +129,72 @@ describe('persistence', () => {
     await saveGame(data)
     const loaded = await loadGame()
     expect(loaded!.activeEnemy).toEqual({ name: 'Shadow Wolf', strength: 1, hasInitiative: true })
+  })
+
+  describe('version stamping', () => {
+    it('stamps saveVersion on every save', async () => {
+      await saveGame(makeSaveData())
+      const raw = mockStore.get('game-save') as any
+      expect(raw.saveVersion).toBe(CURRENT_SAVE_VERSION)
+    })
+
+    it('round-tripped data retains saveVersion', async () => {
+      await saveGame(makeSaveData())
+      const loaded = await loadGame()
+      expect(loaded!.saveVersion).toBe(CURRENT_SAVE_VERSION)
+    })
+  })
+
+  describe('migrateSaveData', () => {
+    it('migrates a v1 save (no saveVersion, no inventory) to current version', () => {
+      const v1 = makeV1SaveData()
+      const result = migrateSaveData(v1)
+      expect(result).not.toBeNull()
+      expect(result!.saveVersion).toBe(CURRENT_SAVE_VERSION)
+      expect(result!.player.inventory).toEqual({
+        items: [],
+        equippedItemId: null,
+        maxSlots: 5,
+      })
+      expect(result!.player.name).toBe('OldSave')
+    })
+
+    it('returns null for a save with version newer than current', () => {
+      const futureSave = { ...makeSaveData(), saveVersion: CURRENT_SAVE_VERSION + 1 }
+      const result = migrateSaveData(futureSave)
+      expect(result).toBeNull()
+    })
+
+    it('does not modify a current-version save', () => {
+      const data = { ...makeSaveData(), saveVersion: CURRENT_SAVE_VERSION }
+      const result = migrateSaveData(data)
+      expect(result).not.toBeNull()
+      expect(result!.saveVersion).toBe(CURRENT_SAVE_VERSION)
+      expect(result!.player.name).toBe('Tester')
+    })
+
+    it('treats missing saveVersion as version 1', () => {
+      const v1 = makeV1SaveData()
+      delete (v1 as any).saveVersion
+      const result = migrateSaveData(v1)
+      expect(result).not.toBeNull()
+      expect(result!.saveVersion).toBe(CURRENT_SAVE_VERSION)
+    })
+  })
+
+  describe('loadGame with migrations', () => {
+    it('migrates a v1 save stored in IndexedDB', async () => {
+      mockStore.set('game-save', makeV1SaveData())
+      const loaded = await loadGame()
+      expect(loaded).not.toBeNull()
+      expect(loaded!.player.inventory).toBeDefined()
+      expect(loaded!.saveVersion).toBe(CURRENT_SAVE_VERSION)
+    })
+
+    it('returns null for a future-version save in IndexedDB', async () => {
+      mockStore.set('game-save', { ...makeSaveData(), saveVersion: 999 })
+      const loaded = await loadGame()
+      expect(loaded).toBeNull()
+    })
   })
 })

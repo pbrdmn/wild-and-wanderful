@@ -1,6 +1,6 @@
 # 0007 - Save Data Migration on Schema Changes
 
-**Status:** Accepted
+**Status:** Superseded (by ADR 0008)
 **Date:** 2026-03-13
 
 ## Context
