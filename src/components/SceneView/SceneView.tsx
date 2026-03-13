@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { useGameStore } from '../../stores/gameStore'
 import { getBiomeData } from '../../engine/biomes'
 import { canMoveTo } from '../../engine/movement'
 import { AP_COST_ATTACK, AP_COST_FLEE, DIRECTION_OFFSETS, Direction } from '../../engine/types'
 import type { AnimalSpecies as AnimalSpeciesType } from '../../engine/types'
+import { playSound, isMuted, setMuted } from '../../utils/audio'
 import styles from './SceneView.module.css'
 
 const SPECIES_LABELS: Record<AnimalSpeciesType, string> = {
@@ -28,17 +30,45 @@ export function SceneView() {
   const combatLog = useGameStore((s) => s.combatLog)
   const setView = useGameStore((s) => s.setView)
   const endTurn = useGameStore((s) => s.endTurn)
-  const rest = useGameStore((s) => s.rest)
-  const search = useGameStore((s) => s.search)
-  const attack = useGameStore((s) => s.attack)
+  const storeRest = useGameStore((s) => s.rest)
+  const storeSearch = useGameStore((s) => s.search)
+  const storeAttack = useGameStore((s) => s.attack)
   const useSkill = useGameStore((s) => s.useSkill)
   const flee = useGameStore((s) => s.flee)
   const retire = useGameStore((s) => s.retire)
   const currentTileDescription = useGameStore((s) => s.currentTileDescription)
   const peripheralGlimpses = useGameStore((s) => s.peripheralGlimpses)
-  const movePlayer = useGameStore((s) => s.movePlayer)
+  const storeMove = useGameStore((s) => s.movePlayer)
   const equippedItem = useGameStore((s) => s.equippedItem)
   const availableSkills = useGameStore((s) => s.availableSkills)
+
+  const [soundMuted, setSoundMuted] = useState(isMuted())
+
+  const toggleMute = () => {
+    const next = !soundMuted
+    setSoundMuted(next)
+    setMuted(next)
+  }
+
+  const movePlayer = (x: number, y: number) => {
+    storeMove(x, y)
+    playSound('move')
+  }
+
+  const search = () => {
+    storeSearch()
+    playSound('tap')
+  }
+
+  const rest = () => {
+    storeRest()
+    playSound('tap')
+  }
+
+  const attack = () => {
+    storeAttack()
+    playSound('hit')
+  }
 
   const currentTile = world.tiles[player.y][player.x]
   const biome = getBiomeData(currentTile.terrain)
@@ -68,6 +98,14 @@ export function SceneView() {
             </span>
             <span className={styles.level} data-testid="level-display">Lv {player.level}</span>
             <span className={styles.xp} data-testid="xp-display">XP: {player.xp}</span>
+            <button
+              className={styles.muteButton}
+              onClick={toggleMute}
+              aria-label={soundMuted ? 'Unmute sounds' : 'Mute sounds'}
+              data-testid="mute-toggle"
+            >
+              {soundMuted ? '🔇' : '🔊'}
+            </button>
           </div>
         </div>
         {equipped && (
