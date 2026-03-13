@@ -12,21 +12,19 @@ interface MapTileProps {
   isPlayer: boolean
   isQuest: boolean
   isAdjacent: boolean
-  isSelected: boolean
   movable: boolean
   visible: boolean
   onClick: (x: number, y: number) => void
 }
 
 const MapTile = memo(function MapTile({
-  tile, x, y, isPlayer, isQuest, isAdjacent, isSelected, movable, visible, onClick,
+  tile, x, y, isPlayer, isQuest, isAdjacent, movable, visible, onClick,
 }: MapTileProps) {
-  const clickable = movable || isPlayer
+  const clickable = movable
 
   let cellClass = styles.tile
   if (!visible && !isQuest) cellClass += ` ${styles.fog}`
   if (isPlayer) cellClass += ` ${styles.player}`
-  if (isSelected) cellClass += ` ${styles.selected}`
   if (isAdjacent) cellClass += ` ${styles.adjacent}`
   if (clickable) cellClass += ` ${styles.movable}`
 
@@ -83,7 +81,6 @@ export function MapView() {
   const movePlayer = useGameStore((s) => s.movePlayer)
   const setView = useGameStore((s) => s.setView)
   const message = useGameStore((s) => s.message)
-  const [selectedTile, setSelectedTile] = useState<{ x: number; y: number } | null>(null)
   const [zoomed, setZoomed] = useState(true)
 
   const isAdjacent = (x: number, y: number) => {
@@ -96,28 +93,10 @@ export function MapView() {
     player.x === x && player.y === y
 
   const handleTileClick = (x: number, y: number) => {
-    if (selectedTile?.x === x && selectedTile?.y === y) {
-      setSelectedTile(null)
-      return
-    }
-
-    if (isPlayerTile(x, y)) {
-      setSelectedTile({ x, y })
-      return
-    }
-
     if (!isAdjacent(x, y)) return
     const tile = world.tiles[y][x]
     if (!canMoveTo(tile)) return
-    setSelectedTile({ x, y })
-  }
-
-  const canTravel = selectedTile != null && !isPlayerTile(selectedTile.x, selectedTile.y)
-
-  const handleTravel = () => {
-    if (!canTravel) return
-    movePlayer(selectedTile.x, selectedTile.y)
-    setSelectedTile(null)
+    movePlayer(x, y)
     setView('scene')
   }
 
@@ -178,7 +157,6 @@ export function MapView() {
                   isPlayer={isPlayerTile(x, y)}
                   isQuest={world.questMarker.x === x && world.questMarker.y === y}
                   isAdjacent={adj}
-                  isSelected={selectedTile?.x === x && selectedTile?.y === y}
                   movable={adj && canMoveTo(tile)}
                   visible={visible}
                   onClick={handleTileClick}
@@ -196,14 +174,6 @@ export function MapView() {
       )}
 
       <footer className={styles.actions}>
-        <button
-          className={`${styles.actionButton} ${styles.travelButton}`}
-          onClick={handleTravel}
-          disabled={!canTravel}
-          data-testid="travel-button"
-        >
-          Travel
-        </button>
         <button
           className={styles.actionButton}
           onClick={() => setView('scene')}

@@ -26,7 +26,7 @@
   gap: var(--spacing-lg);
 }
 
-.heroSprite {
+.wandererSprite {
   width: 96px;
   height: 96px;
   image-rendering: pixelated;
@@ -35,7 +35,7 @@
   animation: fadeIn 600ms ease 200ms both;
 }
 
-.heroInfo {
+.wandererInfo {
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -43,13 +43,13 @@
   animation: fadeSlideIn 500ms ease 400ms both;
 }
 
-.heroName {
+.wandererName {
   font-size: 1.4rem;
   color: var(--color-forest-dark);
   margin: 0;
 }
 
-.heroSpecies {
+.wandererSpecies {
   font-size: 0.9rem;
   font-style: italic;
   color: var(--color-text-muted);

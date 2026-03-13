@@ -29,6 +29,7 @@ import {
   getCombatOutcome,
 } from '../engine/combat'
 import { checkTileEncounter } from '../engine/enemies'
+import { resolveDiscovery } from '../engine/discoveries'
 import { calculateXpReward, checkLevelUp } from '../engine/progression'
 import { createLeaderboardEntry, addToLeaderboard } from '../engine/leaderboard'
 import { getTileDescription, getPeripheralGlimpse } from '../engine/biomes'
@@ -42,7 +43,7 @@ interface GameActions {
   initGame: (seed?: number) => void
   loadSavedGame: () => Promise<boolean>
   newGame: (seed?: number) => void
-  setCharacter: (name: string, species: AnimalSpecies) => void
+  setWanderer: (name: string, species: AnimalSpecies) => void
   movePlayer: (x: number, y: number) => boolean
   endTurn: () => void
   setView: (view: ViewMode) => void
@@ -59,7 +60,7 @@ interface GameActions {
   setActiveSkills: (skillIds: string[]) => void
   retire: () => void
   completeQuest: () => void
-  saveHeroToLeaderboard: () => Promise<void>
+  saveWandererToLeaderboard: () => Promise<void>
   loadLeaderboard: () => Promise<void>
 }
 
@@ -120,7 +121,7 @@ export const useGameStore = create<GameStore>((set, get) => {
   return {
     world: defaultWorld,
     player: defaultPlayer,
-    turnNumber: 1,
+    combatRounds: 1,
     gamePhase: 'intro' as GamePhase,
     activeEnemy: undefined,
     view: 'intro' as ViewMode,
@@ -145,7 +146,7 @@ export const useGameStore = create<GameStore>((set, get) => {
       set({
         world,
         player,
-        turnNumber: 1,
+        combatRounds: 1,
         gamePhase: 'intro',
         activeEnemy: undefined,
         view: 'intro',
@@ -165,11 +166,11 @@ export const useGameStore = create<GameStore>((set, get) => {
       if (!save) {
         return false
       }
-      actionRng = createRng(save.gameSeed + 1 + save.turnNumber)
+      actionRng = createRng(save.gameSeed + 1 + save.combatRounds)
       set({
         world: save.world,
         player: save.player,
-        turnNumber: save.turnNumber,
+        combatRounds: save.combatRounds,
         gamePhase: save.gamePhase,
         activeEnemy: save.activeEnemy,
         gameSeed: save.gameSeed,
@@ -190,7 +191,7 @@ export const useGameStore = create<GameStore>((set, get) => {
       get().initGame(seed)
     },
 
-    setCharacter: (name: string, species: AnimalSpecies) => {
+    setWanderer: (name: string, species: AnimalSpecies) => {
       const { player } = get()
       set({ player: { ...player, name, species } })
     },
@@ -231,6 +232,14 @@ export const useGameStore = create<GameStore>((set, get) => {
         updates.message = `A ${encounter.name} blocks your path!`
         updates.playerDodgeChance = 0
         updates.playerHasShield = false
+      } else if (result.tile.discoveryId) {
+        const discoveryResult = resolveDiscovery(updates.player!, result.tile.discoveryId)
+        if (discoveryResult) {
+          updates.player = discoveryResult.player
+          updates.message = discoveryResult.message
+          newTiles[y][x] = { ...newTiles[y][x], discoveryId: undefined }
+          updates.world = { ...world, tiles: newTiles }
+        }
       }
 
       set(updates)
@@ -238,12 +247,12 @@ export const useGameStore = create<GameStore>((set, get) => {
     },
 
     endTurn: () => {
-      const { player, turnNumber, gamePhase } = get()
+      const { player, combatRounds, gamePhase } = get()
       if (gamePhase !== 'combat') return
       set({
         player: { ...player, ap: player.maxAp },
-        turnNumber: turnNumber + 1,
-        message: `Turn ${turnNumber + 1} begins.`,
+        combatRounds: combatRounds + 1,
+        message: `Round ${combatRounds + 1} begins.`,
       })
     },
 
@@ -614,8 +623,8 @@ export const useGameStore = create<GameStore>((set, get) => {
     },
 
     retire: () => {
-      const { player, turnNumber, leaderboard } = get()
-      const entry = createLeaderboardEntry(player, turnNumber, false)
+      const { player, combatRounds, leaderboard } = get()
+      const entry = createLeaderboardEntry(player, combatRounds, false)
       const updated = addToLeaderboard(leaderboard, entry)
       saveLeaderboard(updated)
       clearSave()
@@ -628,8 +637,8 @@ export const useGameStore = create<GameStore>((set, get) => {
     },
 
     completeQuest: () => {
-      const { player, turnNumber, leaderboard } = get()
-      const entry = createLeaderboardEntry(player, turnNumber, true)
+      const { player, combatRounds, leaderboard } = get()
+      const entry = createLeaderboardEntry(player, combatRounds, true)
       const updated = addToLeaderboard(leaderboard, entry)
       saveLeaderboard(updated)
       clearSave()
@@ -641,10 +650,10 @@ export const useGameStore = create<GameStore>((set, get) => {
       })
     },
 
-    saveHeroToLeaderboard: async () => {
-      const { player, turnNumber, gamePhase, leaderboard } = get()
+    saveWandererToLeaderboard: async () => {
+      const { player, combatRounds, gamePhase, leaderboard } = get()
       const questCompleted = gamePhase === 'questComplete'
-      const entry = createLeaderboardEntry(player, turnNumber, questCompleted)
+      const entry = createLeaderboardEntry(player, combatRounds, questCompleted)
       const updated = addToLeaderboard(leaderboard, entry)
       await saveLeaderboard(updated)
       set({ leaderboard: updated })
@@ -660,9 +669,9 @@ export const useGameStore = create<GameStore>((set, get) => {
     },
 
     currentTileDescription: () => {
-      const { player, world, turnNumber } = get()
+      const { player, world } = get()
       const tile = world.tiles[player.y][player.x]
-      return getTileDescription(tile.terrain, player.x * 31 + player.y * 17 + turnNumber)
+      return getTileDescription(tile.terrain, player.x * 31 + player.y * 17)
     },
 
     peripheralGlimpses: () => {
@@ -709,7 +718,7 @@ function extractSaveData(state: GameStore): SaveData {
   return {
     world: state.world,
     player: state.player,
-    turnNumber: state.turnNumber,
+    combatRounds: state.combatRounds,
     gamePhase: state.gamePhase,
     activeEnemy: state.activeEnemy,
     gameSeed: state.gameSeed,

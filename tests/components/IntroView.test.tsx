@@ -6,7 +6,7 @@ import { useGameStore } from '../../src/stores/gameStore'
 
 async function advanceToHeirloomStep() {
   const user = userEvent.setup()
-  const confirmBtn = screen.getByTestId('confirm-character')
+  const confirmBtn = screen.getByTestId('confirm-wanderer')
   await user.click(confirmBtn)
   return user
 }
@@ -23,7 +23,7 @@ describe('IntroView', () => {
     expect(screen.getByText('Wild & Wanderful')).toBeInTheDocument()
   })
 
-  it('starts on the character creation step', () => {
+  it('starts on the wanderer creation step', () => {
     render(<IntroView />)
     expect(screen.getByTestId('name-input')).toBeInTheDocument()
     expect(screen.getByTestId('species-choices')).toBeInTheDocument()
@@ -35,12 +35,12 @@ describe('IntroView', () => {
     expect(grid.children).toHaveLength(7)
   })
 
-  it('advances to heirloom step after confirming character', async () => {
+  it('advances to heirloom step after confirming wanderer', async () => {
     const user = userEvent.setup()
     render(<IntroView />)
     await user.type(screen.getByTestId('name-input'), 'Bramble')
     await user.click(screen.getByTestId('species-card-bear'))
-    await user.click(screen.getByTestId('confirm-character'))
+    await user.click(screen.getByTestId('confirm-wanderer'))
     expect(screen.getByTestId('heirloom-choices')).toBeInTheDocument()
     const { player } = useGameStore.getState()
     expect(player.name).toBe('Bramble')

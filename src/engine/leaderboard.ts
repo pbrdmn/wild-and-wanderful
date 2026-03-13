@@ -4,7 +4,7 @@ import { getEquippedItem } from './inventory'
 
 export function createLeaderboardEntry(
   player: Player,
-  turnNumber: number,
+  combatRounds: number,
   questCompleted: boolean,
 ): LeaderboardEntry {
   const equipped = getEquippedItem(player)
@@ -14,7 +14,7 @@ export function createLeaderboardEntry(
     species: player.species,
     level: player.level,
     xp: player.xp,
-    turnsSurvived: turnNumber,
+    combatRounds,
     questCompleted,
     equippedItemName: equipped?.name ?? null,
     date: Date.now(),

@@ -2,6 +2,7 @@ import type { Tile, World, LeaderboardEntry } from './types'
 import { TerrainType, DEFAULT_WORLD_SIZE } from './types'
 import { createRng, randomInt, pickRandom } from './random'
 import { placeEnemies } from './enemies'
+import { placeDiscoveries } from './discoveries'
 import { selectLegacyNpcs, placeLegacyNpcs } from './legacy'
 
 const PASSABLE_TERRAIN: TerrainType[] = [
@@ -160,8 +161,9 @@ export function generateWorld(
 
   // Sparse enemy placement (skip villages and starting area)
   placeEnemies(tiles, width, height, rng)
-  // Clear enemies from the starting village and its immediate surroundings
+  // Clear enemies and discoveries from the starting village and its immediate surroundings
   tiles[startY][startX].enemyId = undefined
+  tiles[startY][startX].discoveryId = undefined
   for (const [dx, dy] of [[0, -1], [1, 0], [0, 1], [-1, 0]] as const) {
     const nx = startX + dx
     const ny = startY + dy
@@ -174,6 +176,8 @@ export function generateWorld(
     const legacyNpcs = selectLegacyNpcs(leaderboard, rng)
     placeLegacyNpcs(tiles, width, height, legacyNpcs, rng)
   }
+
+  placeDiscoveries(tiles, width, height, rng)
 
   return {
     width,

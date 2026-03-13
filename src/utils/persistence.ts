@@ -4,12 +4,12 @@ import type { GameState, Item, LeaderboardEntry } from '../engine/types'
 const SAVE_KEY = 'game-save'
 const LEADERBOARD_KEY = 'leaderboard'
 
-export const CURRENT_SAVE_VERSION = 4
+export const CURRENT_SAVE_VERSION = 5
 
 export interface SaveData {
   world: GameState['world']
   player: GameState['player']
-  turnNumber: number
+  combatRounds: number
   gamePhase: GameState['gamePhase']
   activeEnemy: GameState['activeEnemy']
   gameSeed: number
@@ -42,6 +42,11 @@ const migrations: Record<number, (data: any) => any> = {
   3: (data) => {
     if (!data.player.species) data.player.species = 'fox'
     if (data.player.xp === undefined) data.player.xp = 0
+    return data
+  },
+  4: (data) => {
+    data.combatRounds = data.turnNumber ?? 0
+    delete data.turnNumber
     return data
   },
 }

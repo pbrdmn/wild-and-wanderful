@@ -60,9 +60,9 @@ export function movePlayer(
   return { success: true, player: updatedPlayer, tile: updatedTile }
 }
 
-export function endTurn(player: Player, turnNumber: number): { player: Player; turnNumber: number } {
+export function endTurn(player: Player, combatRounds: number): { player: Player; combatRounds: number } {
   return {
     player: { ...player, ap: player.maxAp },
-    turnNumber: turnNumber + 1,
+    combatRounds: combatRounds + 1,
   }
 }

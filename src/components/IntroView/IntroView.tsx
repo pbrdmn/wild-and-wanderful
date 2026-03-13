@@ -59,26 +59,26 @@ function ItemCard({ item, onSelect }: { item: Item; onSelect: () => void }) {
   )
 }
 
-type IntroStep = 'character' | 'heirloom'
+type IntroStep = 'wanderer' | 'heirloom'
 
 export function IntroView() {
   const offeredItems = useGameStore((s) => s.offeredItems)
   const selectItem = useGameStore((s) => s.selectItem)
-  const setCharacter = useGameStore((s) => s.setCharacter)
+  const setWanderer = useGameStore((s) => s.setWanderer)
   const setView = useGameStore((s) => s.setView)
   const leaderboard = useGameStore((s) => s.leaderboard)
 
-  const [step, setStep] = useState<IntroStep>('character')
+  const [step, setStep] = useState<IntroStep>('wanderer')
   const [name, setName] = useState('')
   const [species, setSpecies] = useState<AnimalSpeciesType>(AnimalSpecies.Fox)
 
-  const handleConfirmCharacter = () => {
+  const handleConfirmWanderer = () => {
     const finalName = name.trim() || 'Wanderer'
-    setCharacter(finalName, species)
+    setWanderer(finalName, species)
     setStep('heirloom')
   }
 
-  if (step === 'character') {
+  if (step === 'wanderer') {
     return (
       <div className={styles.introView}>
         <header className={styles.header}>
@@ -93,9 +93,9 @@ export function IntroView() {
           </div>
 
           <div className={styles.nameSection} data-testid="name-section">
-            <label className={styles.nameLabel} htmlFor="character-name">Name Your Wanderer</label>
+            <label className={styles.nameLabel} htmlFor="wanderer-name">Name Your Wanderer</label>
             <input
-              id="character-name"
+              id="wanderer-name"
               className={styles.nameInput}
               type="text"
               placeholder="Wanderer"
@@ -127,8 +127,8 @@ export function IntroView() {
 
           <button
             className={styles.confirmButton}
-            onClick={handleConfirmCharacter}
-            data-testid="confirm-character"
+            onClick={handleConfirmWanderer}
+            data-testid="confirm-wanderer"
           >
             Begin Your Tale
           </button>
@@ -137,7 +137,7 @@ export function IntroView() {
             <button
               className={styles.leaderboardButton}
               onClick={() => setView('leaderboard')}
-              data-testid="hall-of-heroes-button"
+              data-testid="hall-of-wanderers-button"
             >
               Hall of Wanderers
             </button>

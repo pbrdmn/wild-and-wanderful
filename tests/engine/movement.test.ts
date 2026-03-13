@@ -134,10 +134,10 @@ describe('endTurn', () => {
     expect(result.player.ap).toBe(DEFAULT_MAX_AP)
   })
 
-  it('increments the turn number', () => {
+  it('increments the combat rounds', () => {
     const player = makePlayer()
     const result = endTurn(player, 5)
-    expect(result.turnNumber).toBe(6)
+    expect(result.combatRounds).toBe(6)
   })
 
   it('does not mutate the original player', () => {
