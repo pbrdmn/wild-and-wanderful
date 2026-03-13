@@ -94,7 +94,27 @@
   min-height: 48px;
 }
 
-.actionButton:active {
+.actionButton:active:not(:disabled) {
   background-color: var(--color-forest-dark);
   transform: scale(0.97);
+}
+
+.actionButton.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.wounds {
+  font-weight: 600;
+  color: var(--color-earth);
+}
+
+.combatBanner {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-earth);
+  color: var(--color-parchment);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-align: center;
 }

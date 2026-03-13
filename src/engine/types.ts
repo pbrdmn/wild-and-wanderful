@@ -44,6 +44,15 @@ export interface Player {
   maxWounds: number
 }
 
+export interface Enemy {
+  name: string
+  strength: number
+}
+
+export interface ActiveEnemy extends Enemy {
+  hasInitiative: boolean
+}
+
 export type GamePhase = 'exploring' | 'combat' | 'resting'
 
 export interface GameState {
@@ -51,6 +60,7 @@ export interface GameState {
   player: Player
   turnNumber: number
   gamePhase: GamePhase
+  activeEnemy?: ActiveEnemy
 }
 
 export const Direction = {
@@ -72,3 +82,8 @@ export const DIRECTION_OFFSETS: Record<Direction, { dx: number; dy: number }> = 
 export const DEFAULT_MAX_AP = 3
 export const DEFAULT_WORLD_SIZE = 20
 export const AP_COST_MOVE = 1
+export const AP_COST_REST = 1
+export const AP_COST_SEARCH = 1
+
+export const AMBUSH_CHANCE = 0.1
+export const SEARCH_REVEAL_CHANCE = 0.3

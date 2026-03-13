@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useGameStore } from '../../src/stores/gameStore'
-import { TerrainType, DEFAULT_MAX_AP } from '../../src/engine/types'
+import { TerrainType, DEFAULT_MAX_AP, AP_COST_REST, AP_COST_SEARCH, IMPASSABLE_TERRAIN } from '../../src/engine/types'
 
 describe('gameStore', () => {
   const TEST_SEED = 42
@@ -130,6 +130,85 @@ describe('gameStore', () => {
           m.tile.hasHiddenPath || !['mountain', 'swamp', 'thicket'].includes(m.tile.terrain)
         ).toBe(true)
       })
+    })
+  })
+
+  describe('rest', () => {
+    it('deducts AP when resting', () => {
+      const apBefore = useGameStore.getState().player.ap
+      useGameStore.getState().rest()
+      expect(useGameStore.getState().player.ap).toBe(apBefore - AP_COST_REST)
+    })
+
+    it('heals a wound when player is wounded', () => {
+      useGameStore.setState({
+        player: { ...useGameStore.getState().player, wounds: 1 },
+      })
+      useGameStore.getState().rest()
+      expect(useGameStore.getState().player.wounds).toBe(0)
+      expect(useGameStore.getState().message).toContain('heal')
+    })
+
+    it('sets message when resting without wounds', () => {
+      useGameStore.getState().rest()
+      const state = useGameStore.getState()
+      expect(state.message).toBeTruthy()
+    })
+
+    it('fails when AP is exhausted', () => {
+      useGameStore.setState({
+        player: { ...useGameStore.getState().player, ap: 0 },
+      })
+      useGameStore.getState().rest()
+      expect(useGameStore.getState().message).toContain('AP')
+    })
+
+    it('stores gameSeed on initGame', () => {
+      expect(useGameStore.getState().gameSeed).toBe(TEST_SEED)
+    })
+  })
+
+  describe('search', () => {
+    it('deducts AP when searching', () => {
+      const apBefore = useGameStore.getState().player.ap
+      useGameStore.getState().search()
+      expect(useGameStore.getState().player.ap).toBe(apBefore - AP_COST_SEARCH)
+    })
+
+    it('sets a message after searching', () => {
+      useGameStore.getState().search()
+      expect(useGameStore.getState().message).toBeTruthy()
+    })
+
+    it('fails when AP is exhausted', () => {
+      useGameStore.setState({
+        player: { ...useGameStore.getState().player, ap: 0 },
+      })
+      useGameStore.getState().search()
+      expect(useGameStore.getState().message).toContain('AP')
+    })
+
+    it('can reveal a hidden path on an adjacent impassable tile', () => {
+      const { player, world } = useGameStore.getState()
+      world.tiles[player.y - 1][player.x].terrain = TerrainType.Mountain
+      world.tiles[player.y - 1][player.x].hasHiddenPath = false
+      useGameStore.setState({ world: { ...world } })
+
+      let revealed = false
+      for (let i = 0; i < 50; i++) {
+        useGameStore.getState().initGame(TEST_SEED + i)
+        const state = useGameStore.getState()
+        state.world.tiles[state.player.y - 1][state.player.x].terrain = TerrainType.Mountain
+        state.world.tiles[state.player.y - 1][state.player.x].hasHiddenPath = false
+        useGameStore.setState({ world: { ...state.world } })
+        useGameStore.getState().search()
+        const updated = useGameStore.getState()
+        if (updated.world.tiles[updated.player.y - 1][updated.player.x].hasHiddenPath) {
+          revealed = true
+          break
+        }
+      }
+      expect(revealed).toBe(true)
     })
   })
 })
