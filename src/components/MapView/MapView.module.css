@@ -1,0 +1,167 @@
+.mapView {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  padding: var(--spacing-sm);
+  padding-bottom: env(safe-area-inset-bottom, var(--spacing-sm));
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.title {
+  font-size: 1.2rem;
+  color: var(--color-forest-dark);
+}
+
+.hud {
+  font-size: 0.875rem;
+}
+
+.ap {
+  font-weight: 600;
+  color: var(--color-accent-dark);
+}
+
+.gridContainer {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.grid {
+  display: grid;
+  gap: 1px;
+  width: 100%;
+  max-width: min(100vw - var(--spacing-md), 100vh - 120px);
+  aspect-ratio: 1;
+  background-color: var(--color-parchment-dark);
+  border-radius: var(--radius-sm);
+}
+
+.tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-parchment);
+  border: none;
+  padding: 0;
+  font-size: clamp(0.4rem, 1.5vw, 0.7rem);
+  line-height: 1;
+  cursor: default;
+  transition: background-color 100ms ease;
+}
+
+.tile[data-terrain="forest"] {
+  background-color: var(--color-forest);
+}
+
+.tile[data-terrain="meadow"] {
+  background-color: var(--color-meadow);
+}
+
+.tile[data-terrain="river"],
+.tile[data-terrain="lake"] {
+  background-color: var(--color-water);
+}
+
+.tile[data-terrain="road"] {
+  background-color: var(--color-road);
+}
+
+.tile[data-terrain="village"] {
+  background-color: var(--color-village);
+}
+
+.tile[data-terrain="mountain"] {
+  background-color: var(--color-mountain);
+}
+
+.tile[data-terrain="swamp"] {
+  background-color: var(--color-swamp);
+}
+
+.tile[data-terrain="thicket"] {
+  background-color: var(--color-forest);
+  opacity: 0.7;
+}
+
+.fog {
+  background-color: var(--color-fog) !important;
+}
+
+.player {
+  background-color: var(--color-accent) !important;
+  z-index: 1;
+}
+
+.playerIcon {
+  font-weight: 700;
+  color: white;
+  font-size: clamp(0.5rem, 2vw, 0.9rem);
+}
+
+.questIcon {
+  font-weight: 700;
+  color: var(--color-danger);
+  font-size: clamp(0.5rem, 2vw, 0.9rem);
+}
+
+.biomeIcon {
+  font-size: clamp(0.35rem, 1.2vw, 0.6rem);
+}
+
+.adjacent {
+  outline: 1px solid var(--color-accent);
+  outline-offset: -1px;
+}
+
+.movable {
+  cursor: pointer;
+}
+
+.movable:active {
+  transform: scale(0.9);
+  background-color: var(--color-accent) !important;
+}
+
+.message {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+  background-color: var(--color-accent);
+  color: white;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.actions {
+  padding-top: var(--spacing-sm);
+  margin-top: auto;
+}
+
+.actionButton {
+  width: 100%;
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-parchment);
+  background-color: var(--color-forest);
+  border: none;
+  border-radius: var(--radius-md);
+  transition: background-color 150ms ease, transform 100ms ease;
+  min-height: 48px;
+}
+
+.actionButton:active {
+  background-color: var(--color-forest-dark);
+  transform: scale(0.97);
+}
