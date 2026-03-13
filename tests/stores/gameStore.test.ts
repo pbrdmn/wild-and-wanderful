@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useGameStore } from '../../src/stores/gameStore'
-import { TerrainType, DEFAULT_MAX_AP, AP_COST_REST, AP_COST_SEARCH, AP_COST_SWAP, AP_COST_ATTACK, ItemCategory } from '../../src/engine/types'
+import { TerrainType, DEFAULT_MAX_AP, AP_COST_SWAP, AP_COST_ATTACK, ItemCategory } from '../../src/engine/types'
 import type { ActiveEnemy } from '../../src/engine/types'
 
 function initAndSkipIntro(seed: number) {
@@ -61,7 +61,7 @@ describe('gameStore', () => {
   })
 
   describe('movePlayer', () => {
-    it('moves to an adjacent passable tile', () => {
+    it('moves to an adjacent passable tile without deducting AP', () => {
       const { player } = useGameStore.getState()
       const movable = useGameStore.getState().movableTiles()
       expect(movable.length).toBeGreaterThan(0)
@@ -73,20 +73,16 @@ describe('gameStore', () => {
       const updated = useGameStore.getState()
       expect(updated.player.x).toBe(target.x)
       expect(updated.player.y).toBe(target.y)
-      expect(updated.player.ap).toBe(player.ap - 1)
+      expect(updated.player.ap).toBe(player.ap)
     })
 
-    it('fails when AP is exhausted', () => {
-      for (let i = 0; i < DEFAULT_MAX_AP; i++) {
+    it('can move multiple times without AP limit', () => {
+      for (let i = 0; i < DEFAULT_MAX_AP + 2; i++) {
         const movable = useGameStore.getState().movableTiles()
         if (movable.length > 0) {
-          useGameStore.getState().movePlayer(movable[0].tile.x, movable[0].tile.y)
+          const success = useGameStore.getState().movePlayer(movable[0].tile.x, movable[0].tile.y)
+          expect(success).toBe(true)
         }
-      }
-      const movable = useGameStore.getState().movableTiles()
-      if (movable.length > 0) {
-        const success = useGameStore.getState().movePlayer(movable[0].tile.x, movable[0].tile.y)
-        expect(success).toBe(false)
       }
     })
 
@@ -102,11 +98,17 @@ describe('gameStore', () => {
   })
 
   describe('endTurn', () => {
-    it('resets AP and increments turn number', () => {
-      const movable = useGameStore.getState().movableTiles()
-      if (movable.length > 0) {
-        useGameStore.getState().movePlayer(movable[0].tile.x, movable[0].tile.y)
-      }
+    it('does nothing outside combat', () => {
+      const turnBefore = useGameStore.getState().turnNumber
+      useGameStore.getState().endTurn()
+      expect(useGameStore.getState().turnNumber).toBe(turnBefore)
+    })
+
+    it('resets AP and increments turn number during combat', () => {
+      useGameStore.setState({
+        gamePhase: 'combat',
+        player: { ...useGameStore.getState().player, ap: 0 },
+      })
       useGameStore.getState().endTurn()
       const state = useGameStore.getState()
       expect(state.player.ap).toBe(DEFAULT_MAX_AP)
@@ -164,10 +166,10 @@ describe('gameStore', () => {
   })
 
   describe('rest', () => {
-    it('deducts AP when resting', () => {
+    it('does not deduct AP when resting (exploration is free)', () => {
       const apBefore = useGameStore.getState().player.ap
       useGameStore.getState().rest()
-      expect(useGameStore.getState().player.ap).toBe(apBefore - AP_COST_REST)
+      expect(useGameStore.getState().player.ap).toBe(apBefore)
     })
 
     it('heals a wound when player is wounded', () => {
@@ -185,37 +187,21 @@ describe('gameStore', () => {
       expect(state.message).toBeTruthy()
     })
 
-    it('fails when AP is exhausted', () => {
-      useGameStore.setState({
-        player: { ...useGameStore.getState().player, ap: 0 },
-      })
-      useGameStore.getState().rest()
-      expect(useGameStore.getState().message).toContain('AP')
-    })
-
     it('stores gameSeed on initGame', () => {
       expect(useGameStore.getState().gameSeed).toBe(TEST_SEED)
     })
   })
 
   describe('search', () => {
-    it('deducts AP when searching', () => {
+    it('does not deduct AP when searching (exploration is free)', () => {
       const apBefore = useGameStore.getState().player.ap
       useGameStore.getState().search()
-      expect(useGameStore.getState().player.ap).toBe(apBefore - AP_COST_SEARCH)
+      expect(useGameStore.getState().player.ap).toBe(apBefore)
     })
 
     it('sets a message after searching', () => {
       useGameStore.getState().search()
       expect(useGameStore.getState().message).toBeTruthy()
-    })
-
-    it('fails when AP is exhausted', () => {
-      useGameStore.setState({
-        player: { ...useGameStore.getState().player, ap: 0 },
-      })
-      useGameStore.getState().search()
-      expect(useGameStore.getState().message).toContain('AP')
     })
 
     it('can reveal a hidden path on an adjacent impassable tile', () => {

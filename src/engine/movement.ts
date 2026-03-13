@@ -1,5 +1,5 @@
 import type { Tile, Player, World } from './types'
-import { Direction, DIRECTION_OFFSETS, IMPASSABLE_TERRAIN, AP_COST_MOVE } from './types'
+import { Direction, DIRECTION_OFFSETS, IMPASSABLE_TERRAIN } from './types'
 
 export interface AdjacentTile {
   tile: Tile
@@ -39,10 +39,6 @@ export function movePlayer(
 ): MoveResult {
   const targetTile = world.tiles[targetY][targetX]
 
-  if (player.ap < AP_COST_MOVE) {
-    return { success: false, reason: 'Not enough AP to move.', player, tile: targetTile }
-  }
-
   const dx = Math.abs(targetX - player.x)
   const dy = Math.abs(targetY - player.y)
   const isAdjacent = (dx + dy) === 1
@@ -59,7 +55,6 @@ export function movePlayer(
     ...player,
     x: targetX,
     y: targetY,
-    ap: player.ap - AP_COST_MOVE,
   }
 
   return { success: true, player: updatedPlayer, tile: updatedTile }

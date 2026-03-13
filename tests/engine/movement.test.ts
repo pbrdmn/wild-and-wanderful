@@ -78,13 +78,12 @@ describe('movePlayer', () => {
 
   it('moves the player to an adjacent passable tile', () => {
     const player = makePlayer({ x: 5, y: 5 })
-    // Ensure target is passable
     world.tiles[4][5].terrain = TerrainType.Meadow
     const result = movePlayer(player, 5, 4, world)
     expect(result.success).toBe(true)
     expect(result.player.x).toBe(5)
     expect(result.player.y).toBe(4)
-    expect(result.player.ap).toBe(DEFAULT_MAX_AP - 1)
+    expect(result.player.ap).toBe(DEFAULT_MAX_AP)
   })
 
   it('marks the target tile as explored', () => {
@@ -95,11 +94,11 @@ describe('movePlayer', () => {
     expect(result.tile.isExplored).toBe(true)
   })
 
-  it('fails when player has no AP', () => {
-    const player = makePlayer({ ap: 0 })
+  it('succeeds even when player has no AP (exploration is free)', () => {
+    const player = makePlayer({ ap: 0, x: 5, y: 5 })
+    world.tiles[4][5].terrain = TerrainType.Meadow
     const result = movePlayer(player, 5, 4, world)
-    expect(result.success).toBe(false)
-    expect(result.reason).toContain('AP')
+    expect(result.success).toBe(true)
   })
 
   it('fails for non-adjacent tiles', () => {

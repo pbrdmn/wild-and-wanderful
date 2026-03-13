@@ -1,0 +1,8 @@
+---
+description: Save build plans to docs/plans/ directory
+alwaysApply: true
+---
+
+# Save Plans to docs/plans/
+
+When creating a build plan or phase plan for this project, always save a copy to `docs/plans/` using the naming convention `YYYY-MM-DD-<slug>.md` (e.g. `docs/plans/2026-03-13-phase-4-skills-combat.md`). This ensures plans are version-controlled alongside the code and accessible to all contributors.

@@ -1,5 +1,5 @@
 import type { Player, World, Direction, Tile } from './types'
-import { AP_COST_SEARCH, SEARCH_REVEAL_CHANCE, IMPASSABLE_TERRAIN, DIRECTION_OFFSETS } from './types'
+import { SEARCH_REVEAL_CHANCE, IMPASSABLE_TERRAIN, DIRECTION_OFFSETS } from './types'
 import { Direction as Dir } from './types'
 
 export interface SearchResult {
@@ -36,17 +36,7 @@ export function search(
   world: World,
   rng: () => number,
 ): SearchResult {
-  if (player.ap < AP_COST_SEARCH) {
-    return {
-      success: false,
-      reason: 'Not enough AP to search.',
-      player,
-      world,
-      foundPath: false,
-    }
-  }
-
-  const updatedPlayer: Player = { ...player, ap: player.ap - AP_COST_SEARCH }
+  const updatedPlayer: Player = { ...player }
 
   const candidates = getAdjacentImpassable(player.x, player.y, world)
   if (candidates.length === 0) {

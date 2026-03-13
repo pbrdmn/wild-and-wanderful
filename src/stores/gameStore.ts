@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import type { GameState, Player, World, GamePhase, ActiveEnemy, Item, Skill, AnimalSpecies, LeaderboardEntry } from '../engine/types'
 import { DEFAULT_MAX_AP, Direction, DIRECTION_OFFSETS, AnimalSpecies as AnimalSpeciesEnum } from '../engine/types'
 import { generateWorld, findStartingPosition } from '../engine/world'
-import { movePlayer as engineMovePlayer, endTurn as engineEndTurn, getAdjacentTiles, canMoveTo } from '../engine/movement'
+import { movePlayer as engineMovePlayer, getAdjacentTiles, canMoveTo } from '../engine/movement'
 import type { AdjacentTile } from '../engine/movement'
 import { rest as engineRest } from '../engine/rest'
 import { search as engineSearch } from '../engine/search'
@@ -224,6 +224,7 @@ export const useGameStore = create<GameStore>((set, get) => {
       if (encounter) {
         newTiles[y][x] = { ...newTiles[y][x], enemyId: undefined }
         updates.world = { ...world, tiles: newTiles }
+        updates.player = { ...result.player, ap: result.player.maxAp }
         updates.gamePhase = 'combat'
         updates.activeEnemy = encounter
         updates.combatLog = [`A ${encounter.name} appears!`]
@@ -237,12 +238,12 @@ export const useGameStore = create<GameStore>((set, get) => {
     },
 
     endTurn: () => {
-      const { player, turnNumber } = get()
-      const result = engineEndTurn(player, turnNumber)
+      const { player, turnNumber, gamePhase } = get()
+      if (gamePhase !== 'combat') return
       set({
-        player: result.player,
-        turnNumber: result.turnNumber,
-        message: `Turn ${result.turnNumber} begins.`,
+        player: { ...player, ap: player.maxAp },
+        turnNumber: turnNumber + 1,
+        message: `Turn ${turnNumber + 1} begins.`,
       })
     },
 
@@ -260,6 +261,7 @@ export const useGameStore = create<GameStore>((set, get) => {
       }
 
       if (result.ambushed && result.enemy) {
+        updates.player = { ...result.player, ap: result.player.maxAp }
         updates.gamePhase = 'combat'
         updates.activeEnemy = result.enemy
         updates.message = result.woundHealed

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { rest } from '../../src/engine/rest'
 import type { Player } from '../../src/engine/types'
-import { DEFAULT_MAX_AP, AP_COST_REST } from '../../src/engine/types'
+import { DEFAULT_MAX_AP } from '../../src/engine/types'
 import { createRng } from '../../src/engine/random'
 
 function makePlayer(overrides: Partial<Player> = {}): Player {
@@ -22,20 +22,19 @@ function makeRngReturning(values: number[]): () => number {
 }
 
 describe('rest', () => {
-  it('deducts AP on successful rest', () => {
+  it('succeeds without deducting AP (exploration is free)', () => {
     const player = makePlayer()
     const rng = makeRngReturning([0.5])
     const result = rest(player, rng)
     expect(result.success).toBe(true)
-    expect(result.player.ap).toBe(DEFAULT_MAX_AP - AP_COST_REST)
+    expect(result.player.ap).toBe(DEFAULT_MAX_AP)
   })
 
-  it('fails when player has insufficient AP', () => {
+  it('succeeds even when player has no AP', () => {
     const player = makePlayer({ ap: 0 })
     const rng = makeRngReturning([0.5])
     const result = rest(player, rng)
-    expect(result.success).toBe(false)
-    expect(result.reason).toContain('AP')
+    expect(result.success).toBe(true)
     expect(result.player.ap).toBe(0)
   })
 

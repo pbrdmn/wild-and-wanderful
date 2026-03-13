@@ -35,8 +35,6 @@ export function MapView() {
     if (!isAdjacent(x, y)) return
     const tile = world.tiles[y][x]
     if (!canMoveTo(tile)) return
-    if (player.ap < 1) return
-
     setSelectedTile({ x, y })
   }
 
@@ -53,11 +51,6 @@ export function MapView() {
     <div className={styles.mapView}>
       <header className={styles.header}>
         <h1 className={styles.title}>The Map</h1>
-        <div className={styles.hud}>
-          <span className={styles.ap} data-testid="map-ap-display">
-            AP: {player.ap}/{player.maxAp}
-          </span>
-        </div>
       </header>
 
       <div className={styles.gridContainer} data-testid="map-grid">
@@ -74,7 +67,7 @@ export function MapView() {
               const isQuest = world.questMarker.x === x && world.questMarker.y === y
               const adj = isAdjacent(x, y)
               const visible = tile.isExplored || adj || isPlayer
-              const movable = adj && canMoveTo(tile) && player.ap >= 1
+              const movable = adj && canMoveTo(tile)
               const clickable = movable || isPlayer
 
               const isSelected = selectedTile?.x === x && selectedTile?.y === y

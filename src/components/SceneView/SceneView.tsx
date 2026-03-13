@@ -1,6 +1,6 @@
 import { useGameStore } from '../../stores/gameStore'
 import { getBiomeData } from '../../engine/biomes'
-import { AP_COST_REST, AP_COST_SEARCH, AP_COST_ATTACK, AP_COST_FLEE } from '../../engine/types'
+import { AP_COST_ATTACK, AP_COST_FLEE } from '../../engine/types'
 import type { AnimalSpecies as AnimalSpeciesType } from '../../engine/types'
 import styles from './SceneView.module.css'
 
@@ -21,7 +21,6 @@ function StatusEffectIcon({ type }: { type: string }) {
 export function SceneView() {
   const player = useGameStore((s) => s.player)
   const world = useGameStore((s) => s.world)
-  const turnNumber = useGameStore((s) => s.turnNumber)
   const gamePhase = useGameStore((s) => s.gamePhase)
   const activeEnemy = useGameStore((s) => s.activeEnemy)
   const message = useGameStore((s) => s.message)
@@ -47,9 +46,7 @@ export function SceneView() {
   const skills = availableSkills()
 
   const inCombat = gamePhase === 'combat' && activeEnemy != null
-  const canAct = player.ap >= AP_COST_REST
-  const canRest = canAct && player.wounds > 0
-  const canSearch = player.ap >= AP_COST_SEARCH
+  const canRest = player.wounds > 0
   const canAttack = inCombat && player.ap >= AP_COST_ATTACK && equipped != null
   const canFlee = inCombat && player.ap >= AP_COST_FLEE
 
@@ -59,17 +56,16 @@ export function SceneView() {
         <div className={styles.headerTop}>
           <h1 className={styles.title}>{biome.name}</h1>
           <div className={styles.hud}>
-            <span className={styles.ap} data-testid="ap-display">
-              AP: {player.ap}/{player.maxAp}
-            </span>
+            {inCombat && (
+              <span className={styles.ap} data-testid="ap-display">
+                AP: {player.ap}/{player.maxAp}
+              </span>
+            )}
             <span className={styles.wounds} data-testid="wounds-display">
               Wounds: {player.wounds}/{player.maxWounds}
             </span>
             <span className={styles.level} data-testid="level-display">Lv {player.level}</span>
             <span className={styles.xp} data-testid="xp-display">XP: {player.xp}</span>
-            <span className={styles.turn} data-testid="turn-display">
-              Turn {turnNumber}
-            </span>
           </div>
         </div>
         {equipped && (
@@ -203,9 +199,8 @@ export function SceneView() {
               Skills
             </button>
             <button
-              className={`${styles.actionButton} ${!canSearch ? styles.disabled : ''}`}
+              className={styles.actionButton}
               onClick={search}
-              disabled={!canSearch}
               data-testid="search-button"
             >
               Search
@@ -227,13 +222,15 @@ export function SceneView() {
             </button>
           </>
         )}
-        <button
-          className={styles.actionButton}
-          onClick={endTurn}
-          data-testid="end-turn-button"
-        >
-          End Turn
-        </button>
+        {inCombat && (
+          <button
+            className={styles.actionButton}
+            onClick={endTurn}
+            data-testid="end-turn-button"
+          >
+            End Turn
+          </button>
+        )}
       </footer>
     </div>
   )
