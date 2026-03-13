@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useGameStore } from '../../stores/gameStore'
 import { AnimalSpecies, ItemCategory } from '../../engine/types'
 import type { Item, AnimalSpecies as AnimalSpeciesType } from '../../engine/types'
+import { getFrontSpriteStyle } from '../../sprites/spriteConfig'
 import styles from './IntroView.module.css'
 
 const SPECIES_LIST: { id: AnimalSpeciesType; label: string; flavour: string }[] = [
@@ -13,29 +14,6 @@ const SPECIES_LIST: { id: AnimalSpeciesType; label: string; flavour: string }[] 
   { id: AnimalSpecies.Bird, label: 'Bird', flavour: 'Sharp-eyed and free-spirited.' },
   { id: AnimalSpecies.Frog, label: 'Frog', flavour: 'Patient and surprisingly tough.' },
 ]
-
-const SPRITE_CONFIG: Record<AnimalSpeciesType, { col: number; row: number; cols: number }> = {
-  fox:     { col: 0, row: 0, cols: 3 },
-  bear:    { col: 1, row: 0, cols: 3 },
-  mouse:   { col: 2, row: 0, cols: 3 },
-  raccoon: { col: 0, row: 1, cols: 4 },
-  cat:     { col: 1, row: 1, cols: 4 },
-  bird:    { col: 2, row: 1, cols: 4 },
-  frog:    { col: 3, row: 1, cols: 4 },
-}
-
-function getSpriteStyle(species: AnimalSpeciesType, sheet: string): React.CSSProperties {
-  const cfg = SPRITE_CONFIG[species] ?? SPRITE_CONFIG.fox
-  const bgSize = `${cfg.cols * 100}% 200%`
-  const posX = cfg.cols > 1 ? (cfg.col / (cfg.cols - 1)) * 100 : 0
-  const posY = cfg.row * 100
-  return {
-    backgroundImage: `url(${sheet})`,
-    backgroundSize: bgSize,
-    backgroundPosition: `${posX}% ${posY}%`,
-    backgroundRepeat: 'no-repeat',
-  }
-}
 
 const CATEGORY_LABELS: Record<string, string> = {
   [ItemCategory.Melee]: 'Melee',
@@ -117,7 +95,7 @@ export function IntroView() {
               >
                 <div
                   className={styles.speciesSprite}
-                  style={getSpriteStyle(s.id, '/character-selection.png')}
+                  style={getFrontSpriteStyle(s.id)}
                 />
                 <span className={styles.speciesName}>{s.label}</span>
                 <span className={styles.speciesFlavour}>{s.flavour}</span>

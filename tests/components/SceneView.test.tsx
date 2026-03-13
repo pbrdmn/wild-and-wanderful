@@ -21,6 +21,12 @@ describe('SceneView', () => {
     initAndSkipIntro(TEST_SEED)
   })
 
+  it('renders the battle stage', () => {
+    render(<SceneView />)
+    expect(screen.getByTestId('battle-stage')).toBeInTheDocument()
+    expect(screen.getByTestId('player-sprite')).toBeInTheDocument()
+  })
+
   it('renders the current tile description', () => {
     render(<SceneView />)
     const desc = screen.getByTestId('tile-description')
@@ -211,11 +217,11 @@ describe('SceneView', () => {
       expect(screen.getByTestId('combat-panel')).toBeInTheDocument()
     })
 
-    it('displays enemy name and HP bar', () => {
+    it('displays enemy name and HP bar in battle stage', () => {
       enterCombat()
       render(<SceneView />)
-      expect(screen.getByTestId('enemy-info').textContent).toContain('Shadow Wolf')
-      expect(screen.getByTestId('enemy-hp-bar')).toBeInTheDocument()
+      expect(screen.getByTestId('stage-enemy-info').textContent).toContain('Shadow Wolf')
+      expect(screen.getByTestId('stage-enemy-hp')).toBeInTheDocument()
     })
 
     it('shows attack and flee buttons in combat', () => {
@@ -279,7 +285,7 @@ describe('SceneView', () => {
       expect(screen.getByTestId('attack-button')).toBeDisabled()
     })
 
-    it('shows enemy status effects', () => {
+    it('shows enemy status effects in battle stage', () => {
       const enemy: ActiveEnemy = {
         name: 'Test',
         strength: 1,
@@ -294,7 +300,7 @@ describe('SceneView', () => {
         combatLog: [],
       })
       render(<SceneView />)
-      expect(screen.getByTestId('enemy-status-effects')).toBeInTheDocument()
+      expect(screen.getByTestId('stage-enemy-status')).toBeInTheDocument()
     })
   })
 })

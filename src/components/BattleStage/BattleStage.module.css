@@ -1,0 +1,146 @@
+.stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  animation: fadeIn 400ms ease both;
+}
+
+.background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.ground {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 35%;
+  z-index: 1;
+}
+
+.enemyPlatform {
+  position: absolute;
+  top: 18%;
+  right: 10%;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  animation: fadeSlideIn 400ms ease 100ms both;
+}
+
+.enemyShadow {
+  width: 72px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.enemySprite {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  image-rendering: pixelated;
+}
+
+.enemyInfoBar {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  min-width: 120px;
+}
+
+.enemyNameRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.enemyNameLabel {
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-parchment);
+}
+
+.statusEffects {
+  display: flex;
+  gap: 2px;
+}
+
+.statusIcon {
+  font-size: 0.75rem;
+}
+
+.hpBarTrack {
+  position: relative;
+  height: 10px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.hpBarFill {
+  height: 100%;
+  background: var(--color-accent);
+  border-radius: 3px;
+  transition: width 300ms ease;
+}
+
+.hpBarLabel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.55rem;
+  font-weight: 700;
+  color: var(--color-parchment);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.playerPlatform {
+  position: absolute;
+  bottom: 8%;
+  left: 8%;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.playerShadow {
+  width: 80px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.playerSprite {
+  width: 72px;
+  height: 72px;
+  image-rendering: pixelated;
+}
+
+.npcSprite {
+  width: 64px;
+  height: 64px;
+  image-rendering: pixelated;
+}

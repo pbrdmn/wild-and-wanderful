@@ -1,34 +1,6 @@
 import { useGameStore } from '../../stores/gameStore'
-import type { AnimalSpecies as AnimalSpeciesType } from '../../engine/types'
+import { getBackSpriteStyle, SPECIES_LABELS } from '../../sprites/spriteConfig'
 import styles from './LeaderboardView.module.css'
-
-const SPECIES_LABELS: Record<AnimalSpeciesType, string> = {
-  fox: 'Fox', bear: 'Bear', mouse: 'Mouse', raccoon: 'Raccoon',
-  cat: 'Cat', bird: 'Bird', frog: 'Frog',
-}
-
-const BACK_SPRITE_CONFIG: Record<AnimalSpeciesType, { col: number; row: number; cols: number }> = {
-  fox:     { col: 0, row: 0, cols: 3 },
-  bear:    { col: 1, row: 0, cols: 3 },
-  mouse:   { col: 2, row: 0, cols: 3 },
-  raccoon: { col: 0, row: 1, cols: 4 },
-  cat:     { col: 1, row: 1, cols: 4 },
-  bird:    { col: 2, row: 1, cols: 4 },
-  frog:    { col: 3, row: 1, cols: 4 },
-}
-
-function getSmallSpriteStyle(species: AnimalSpeciesType): React.CSSProperties {
-  const cfg = BACK_SPRITE_CONFIG[species] ?? BACK_SPRITE_CONFIG.fox
-  const bgSize = `${cfg.cols * 100}% 200%`
-  const posX = cfg.cols > 1 ? (cfg.col / (cfg.cols - 1)) * 100 : 0
-  const posY = cfg.row * 100
-  return {
-    backgroundImage: 'url(/characters.png)',
-    backgroundSize: bgSize,
-    backgroundPosition: `${posX}% ${posY}%`,
-    backgroundRepeat: 'no-repeat',
-  }
-}
 
 export function LeaderboardView() {
   const leaderboard = useGameStore((s) => s.leaderboard)
@@ -56,7 +28,7 @@ export function LeaderboardView() {
                 <span className={styles.rank}>{i + 1}</span>
                 <div
                   className={styles.entrySprite}
-                  style={getSmallSpriteStyle(entry.species)}
+                  style={getBackSpriteStyle(entry.species)}
                 />
                 <div className={styles.entryInfo}>
                   <span className={styles.entryName}>{entry.name}</span>
