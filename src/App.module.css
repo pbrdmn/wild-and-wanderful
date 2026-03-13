@@ -13,11 +13,11 @@
 }
 
 .sceneActive {
-  transform: translateX(0);
+  transform: translateX(0) scale(1);
 }
 
 .mapActive {
-  transform: translateX(-50%);
+  transform: translateX(-50%) scale(1);
 }
 
 .view {
