@@ -1,6 +1,7 @@
 import { useGameStore } from '../../stores/gameStore'
 import { getBiomeData } from '../../engine/biomes'
-import { AP_COST_ATTACK, AP_COST_FLEE } from '../../engine/types'
+import { canMoveTo } from '../../engine/movement'
+import { AP_COST_ATTACK, AP_COST_FLEE, DIRECTION_OFFSETS, Direction } from '../../engine/types'
 import type { AnimalSpecies as AnimalSpeciesType } from '../../engine/types'
 import styles from './SceneView.module.css'
 
@@ -35,6 +36,7 @@ export function SceneView() {
   const retire = useGameStore((s) => s.retire)
   const currentTileDescription = useGameStore((s) => s.currentTileDescription)
   const peripheralGlimpses = useGameStore((s) => s.peripheralGlimpses)
+  const movePlayer = useGameStore((s) => s.movePlayer)
   const equippedItem = useGameStore((s) => s.equippedItem)
   const availableSkills = useGameStore((s) => s.availableSkills)
 
@@ -95,11 +97,29 @@ export function SceneView() {
 
         {!inCombat && (
           <div className={styles.glimpses} data-testid="peripheral-glimpses">
-            {glimpses.map((g) => (
-              <p key={g.direction} className={styles.glimpse}>
-                {g.text}
-              </p>
-            ))}
+            {glimpses.map((g) => {
+              const offset = DIRECTION_OFFSETS[g.direction as Direction]
+              const tx = player.x + offset.dx
+              const ty = player.y + offset.dy
+              const inBounds = tx >= 0 && tx < world.width && ty >= 0 && ty < world.height
+              const tile = inBounds ? world.tiles[ty][tx] : null
+              const passable = tile != null && canMoveTo(tile)
+
+              return passable ? (
+                <button
+                  key={g.direction}
+                  className={`${styles.glimpse} ${styles.glimpseLink}`}
+                  onClick={() => movePlayer(tx, ty)}
+                  data-testid={`glimpse-${g.direction}`}
+                >
+                  {g.text}
+                </button>
+              ) : (
+                <p key={g.direction} className={`${styles.glimpse} ${styles.glimpseBlocked}`} data-testid={`glimpse-${g.direction}`}>
+                  {g.text}
+                </p>
+              )
+            })}
           </div>
         )}
 
