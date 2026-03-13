@@ -1,8 +1,65 @@
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import { useGameStore } from '../../stores/gameStore'
 import { getBiomeSymbol } from '../../engine/biomes'
 import { canMoveTo } from '../../engine/movement'
+import type { Tile } from '../../engine/types'
 import styles from './MapView.module.css'
+
+interface MapTileProps {
+  tile: Tile
+  x: number
+  y: number
+  isPlayer: boolean
+  isQuest: boolean
+  isAdjacent: boolean
+  isSelected: boolean
+  movable: boolean
+  visible: boolean
+  onClick: (x: number, y: number) => void
+}
+
+const MapTile = memo(function MapTile({
+  tile, x, y, isPlayer, isQuest, isAdjacent, isSelected, movable, visible, onClick,
+}: MapTileProps) {
+  const clickable = movable || isPlayer
+
+  let cellClass = styles.tile
+  if (!visible && !isQuest) cellClass += ` ${styles.fog}`
+  if (isPlayer) cellClass += ` ${styles.player}`
+  if (isSelected) cellClass += ` ${styles.selected}`
+  if (isAdjacent) cellClass += ` ${styles.adjacent}`
+  if (clickable) cellClass += ` ${styles.movable}`
+
+  return (
+    <button
+      className={cellClass}
+      onClick={() => onClick(x, y)}
+      disabled={!clickable}
+      data-testid={`tile-${x}-${y}`}
+      data-explored={tile.isExplored}
+      data-visible={visible}
+      data-terrain={tile.terrain}
+      aria-label={
+        isPlayer
+          ? `Your position, ${tile.terrain} at row ${y + 1}, column ${x + 1}`
+          : visible
+            ? `${tile.terrain} at row ${y + 1}, column ${x + 1}${movable ? ', passable' : ''}`
+            : isQuest
+              ? 'Quest marker'
+              : 'Unexplored'
+      }
+      aria-current={isPlayer ? 'true' : undefined}
+    >
+      {isPlayer ? (
+        <span className={styles.playerIcon}>@</span>
+      ) : isQuest ? (
+        <span className={styles.questIcon}>X</span>
+      ) : visible ? (
+        <span className={styles.biomeIcon}>{getBiomeSymbol(tile.terrain)}</span>
+      ) : null}
+    </button>
+  )
+})
 
 const ZOOM_RADIUS = 2
 
@@ -109,51 +166,23 @@ export function MapView() {
             return Array.from({ length: viewCols }, (_, rx) => {
               const x = viewMinX + rx
               const tile = world.tiles[y][x]
-              const isPlayer = isPlayerTile(x, y)
-              const isQuest = world.questMarker.x === x && world.questMarker.y === y
               const adj = isAdjacent(x, y)
-              const visible = tile.isExplored || adj || isPlayer
-              const movable = adj && canMoveTo(tile)
-              const clickable = movable || isPlayer
-
-              const isSelected = selectedTile?.x === x && selectedTile?.y === y
-
-              let cellClass = styles.tile
-              if (!visible && !isQuest) cellClass += ` ${styles.fog}`
-              if (isPlayer) cellClass += ` ${styles.player}`
-              if (isSelected) cellClass += ` ${styles.selected}`
-              if (adj) cellClass += ` ${styles.adjacent}`
-              if (clickable) cellClass += ` ${styles.movable}`
+              const visible = tile.isExplored || adj || isPlayerTile(x, y)
 
               return (
-                <button
+                <MapTile
                   key={`${x}-${y}`}
-                  className={cellClass}
-                  onClick={() => handleTileClick(x, y)}
-                  disabled={!clickable}
-                  data-testid={`tile-${x}-${y}`}
-                  data-explored={tile.isExplored}
-                  data-visible={visible}
-                  data-terrain={tile.terrain}
-                  aria-label={
-                    isPlayer
-                      ? `Your position, ${tile.terrain} at row ${y + 1}, column ${x + 1}`
-                      : visible
-                        ? `${tile.terrain} at row ${y + 1}, column ${x + 1}${movable ? ', passable' : ''}`
-                        : isQuest
-                          ? 'Quest marker'
-                          : 'Unexplored'
-                  }
-                  aria-current={isPlayer ? 'true' : undefined}
-                >
-                  {isPlayer ? (
-                    <span className={styles.playerIcon}>@</span>
-                  ) : isQuest ? (
-                    <span className={styles.questIcon}>X</span>
-                  ) : visible ? (
-                    <span className={styles.biomeIcon}>{getBiomeSymbol(tile.terrain)}</span>
-                  ) : null}
-                </button>
+                  tile={tile}
+                  x={x}
+                  y={y}
+                  isPlayer={isPlayerTile(x, y)}
+                  isQuest={world.questMarker.x === x && world.questMarker.y === y}
+                  isAdjacent={adj}
+                  isSelected={selectedTile?.x === x && selectedTile?.y === y}
+                  movable={adj && canMoveTo(tile)}
+                  visible={visible}
+                  onClick={handleTileClick}
+                />
               )
             })
           })}

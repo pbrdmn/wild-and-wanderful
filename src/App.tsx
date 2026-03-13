@@ -1,13 +1,14 @@
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, lazy, Suspense } from 'react'
 import { useGameStore } from './stores/gameStore'
 import { SceneView } from './components/SceneView'
 import { MapView } from './components/MapView'
 import { IntroView } from './components/IntroView'
 import { InventoryView } from './components/InventoryView'
 import { SkillsView } from './components/SkillsView'
-import { RunEndView } from './components/RunEndView'
-import { LeaderboardView } from './components/LeaderboardView'
 import styles from './App.module.css'
+
+const RunEndView = lazy(() => import('./components/RunEndView').then(m => ({ default: m.RunEndView })))
+const LeaderboardView = lazy(() => import('./components/LeaderboardView').then(m => ({ default: m.LeaderboardView })))
 
 function App() {
   const view = useGameStore((s) => s.view)
@@ -77,7 +78,9 @@ function App() {
       <div className={styles.app} data-testid="leaderboard-screen" ref={mainRef} tabIndex={-1} onKeyDown={handleKeyDown}>
         <a href="#main-content" className={styles.skipLink}>Skip to content</a>
         <div id="main-content">
-          <LeaderboardView />
+          <Suspense fallback={<div className={styles.loading}>Loading...</div>}>
+            <LeaderboardView />
+          </Suspense>
         </div>
       </div>
     )
@@ -88,7 +91,9 @@ function App() {
       <div className={styles.app} data-testid="run-end-screen" ref={mainRef} tabIndex={-1} onKeyDown={handleKeyDown}>
         <a href="#main-content" className={styles.skipLink}>Skip to content</a>
         <div id="main-content">
-          <RunEndView />
+          <Suspense fallback={<div className={styles.loading}>Loading...</div>}>
+            <RunEndView />
+          </Suspense>
         </div>
       </div>
     )

@@ -10,6 +10,7 @@
   width: 200%;
   min-height: 100dvh;
   transition: transform var(--transition-page);
+  will-change: transform;
 }
 
 .sceneActive {
