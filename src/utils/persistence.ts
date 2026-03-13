@@ -1,5 +1,5 @@
 import { get, set, del } from 'idb-keyval'
-import type { GameState } from '../engine/types'
+import type { GameState, Item } from '../engine/types'
 
 const SAVE_KEY = 'game-save'
 
@@ -10,6 +10,7 @@ export interface SaveData {
   gamePhase: GameState['gamePhase']
   activeEnemy: GameState['activeEnemy']
   gameSeed: number
+  offeredItems?: Item[]
 }
 
 export async function saveGame(data: SaveData): Promise<void> {

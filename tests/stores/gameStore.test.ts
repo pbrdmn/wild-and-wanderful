@@ -1,12 +1,20 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useGameStore } from '../../src/stores/gameStore'
-import { TerrainType, DEFAULT_MAX_AP, AP_COST_REST, AP_COST_SEARCH, IMPASSABLE_TERRAIN } from '../../src/engine/types'
+import { TerrainType, DEFAULT_MAX_AP, AP_COST_REST, AP_COST_SEARCH, AP_COST_SWAP, ItemCategory } from '../../src/engine/types'
+
+function initAndSkipIntro(seed: number) {
+  useGameStore.getState().initGame(seed)
+  const { offeredItems } = useGameStore.getState()
+  if (offeredItems.length > 0) {
+    useGameStore.getState().selectItem(offeredItems[0].id)
+  }
+}
 
 describe('gameStore', () => {
   const TEST_SEED = 42
 
   beforeEach(() => {
-    useGameStore.getState().initGame(TEST_SEED)
+    initAndSkipIntro(TEST_SEED)
   })
 
   describe('initGame', () => {
@@ -28,20 +36,32 @@ describe('gameStore', () => {
       expect(player.ap).toBe(DEFAULT_MAX_AP)
     })
 
-    it('starts on turn 1 in exploring phase', () => {
+    it('starts on turn 1 in intro phase before selection', () => {
+      useGameStore.getState().initGame(TEST_SEED)
       const state = useGameStore.getState()
       expect(state.turnNumber).toBe(1)
-      expect(state.gamePhase).toBe('exploring')
+      expect(state.gamePhase).toBe('intro')
+      expect(state.view).toBe('intro')
     })
 
-    it('starts in scene view', () => {
-      expect(useGameStore.getState().view).toBe('scene')
+    it('transitions to exploring after selecting a heirloom', () => {
+      const state = useGameStore.getState()
+      expect(state.gamePhase).toBe('exploring')
+      expect(state.view).toBe('scene')
+    })
+
+    it('generates 3 heirloom choices on init', () => {
+      useGameStore.getState().initGame(TEST_SEED)
+      const { offeredItems } = useGameStore.getState()
+      expect(offeredItems).toHaveLength(3)
+      const categories = offeredItems.map((i) => i.category).sort()
+      expect(categories).toEqual([ItemCategory.Magic, ItemCategory.Melee, ItemCategory.Ranged])
     })
   })
 
   describe('movePlayer', () => {
     it('moves to an adjacent passable tile', () => {
-      const { player, world } = useGameStore.getState()
+      const { player } = useGameStore.getState()
       const movable = useGameStore.getState().movableTiles()
       expect(movable.length).toBeGreaterThan(0)
 
@@ -56,8 +76,6 @@ describe('gameStore', () => {
     })
 
     it('fails when AP is exhausted', () => {
-      const store = useGameStore.getState()
-      // Exhaust AP by moving repeatedly
       for (let i = 0; i < DEFAULT_MAX_AP; i++) {
         const movable = useGameStore.getState().movableTiles()
         if (movable.length > 0) {
@@ -102,6 +120,11 @@ describe('gameStore', () => {
       useGameStore.getState().setView('scene')
       expect(useGameStore.getState().view).toBe('scene')
     })
+
+    it('switches to inventory view', () => {
+      useGameStore.getState().setView('inventory')
+      expect(useGameStore.getState().view).toBe('inventory')
+    })
   })
 
   describe('derived state', () => {
@@ -130,6 +153,12 @@ describe('gameStore', () => {
           m.tile.hasHiddenPath || !['mountain', 'swamp', 'thicket'].includes(m.tile.terrain)
         ).toBe(true)
       })
+    })
+
+    it('returns the equipped item', () => {
+      const equipped = useGameStore.getState().equippedItem()
+      expect(equipped).not.toBeNull()
+      expect(equipped!.name).toBeTruthy()
     })
   })
 
@@ -196,7 +225,7 @@ describe('gameStore', () => {
 
       let revealed = false
       for (let i = 0; i < 50; i++) {
-        useGameStore.getState().initGame(TEST_SEED + i)
+        initAndSkipIntro(TEST_SEED + i)
         const state = useGameStore.getState()
         state.world.tiles[state.player.y - 1][state.player.x].terrain = TerrainType.Mountain
         state.world.tiles[state.player.y - 1][state.player.x].hasHiddenPath = false
@@ -209,6 +238,107 @@ describe('gameStore', () => {
         }
       }
       expect(revealed).toBe(true)
+    })
+  })
+
+  describe('selectItem', () => {
+    it('adds the selected item to inventory and equips it', () => {
+      useGameStore.getState().initGame(TEST_SEED)
+      const { offeredItems } = useGameStore.getState()
+      const chosen = offeredItems[1]
+      useGameStore.getState().selectItem(chosen.id)
+
+      const { player } = useGameStore.getState()
+      expect(player.inventory.items).toHaveLength(1)
+      expect(player.inventory.items[0].id).toBe(chosen.id)
+      expect(player.inventory.equippedItemId).toBe(chosen.id)
+    })
+
+    it('transitions from intro to exploring', () => {
+      useGameStore.getState().initGame(TEST_SEED)
+      expect(useGameStore.getState().gamePhase).toBe('intro')
+      const { offeredItems } = useGameStore.getState()
+      useGameStore.getState().selectItem(offeredItems[0].id)
+      expect(useGameStore.getState().gamePhase).toBe('exploring')
+      expect(useGameStore.getState().view).toBe('scene')
+    })
+
+    it('clears offeredItems after selection', () => {
+      useGameStore.getState().initGame(TEST_SEED)
+      const { offeredItems } = useGameStore.getState()
+      useGameStore.getState().selectItem(offeredItems[0].id)
+      expect(useGameStore.getState().offeredItems).toHaveLength(0)
+    })
+
+    it('sets a message mentioning the item name', () => {
+      useGameStore.getState().initGame(TEST_SEED)
+      const { offeredItems } = useGameStore.getState()
+      const chosen = offeredItems[0]
+      useGameStore.getState().selectItem(chosen.id)
+      expect(useGameStore.getState().message).toContain(chosen.name)
+    })
+
+    it('fails for an invalid item id', () => {
+      useGameStore.getState().initGame(TEST_SEED)
+      useGameStore.getState().selectItem('nonexistent')
+      expect(useGameStore.getState().gamePhase).toBe('intro')
+      expect(useGameStore.getState().message).toContain('not available')
+    })
+  })
+
+  describe('equipItem / unequipItem / swapEquipment', () => {
+    it('equips an item from inventory', () => {
+      const { player } = useGameStore.getState()
+      const itemId = player.inventory.items[0]?.id
+      if (itemId) {
+        useGameStore.getState().unequipItem()
+        expect(useGameStore.getState().player.inventory.equippedItemId).toBeNull()
+        useGameStore.getState().equipItem(itemId)
+        expect(useGameStore.getState().player.inventory.equippedItemId).toBe(itemId)
+      }
+    })
+
+    it('unequips the current item', () => {
+      useGameStore.getState().unequipItem()
+      expect(useGameStore.getState().player.inventory.equippedItemId).toBeNull()
+    })
+
+    it('swapEquipment costs full AP', () => {
+      const { player } = useGameStore.getState()
+      const currentId = player.inventory.equippedItemId
+
+      useGameStore.getState().initGame(TEST_SEED)
+      const { offeredItems } = useGameStore.getState()
+      useGameStore.getState().selectItem(offeredItems[0].id)
+
+      useGameStore.setState({
+        offeredItems: [offeredItems[1]],
+      })
+      useGameStore.getState().selectItem(offeredItems[1].id)
+
+      const state = useGameStore.getState()
+      const items = state.player.inventory.items
+      if (items.length >= 2) {
+        const otherId = items.find((i) => i.id !== state.player.inventory.equippedItemId)?.id
+        if (otherId) {
+          useGameStore.getState().swapEquipment(otherId)
+          const after = useGameStore.getState()
+          expect(after.player.ap).toBe(0)
+          expect(after.player.inventory.equippedItemId).toBe(otherId)
+        }
+      }
+    })
+
+    it('swapEquipment fails without full AP', () => {
+      useGameStore.setState({
+        player: { ...useGameStore.getState().player, ap: 1 },
+      })
+      const { player } = useGameStore.getState()
+      const itemId = player.inventory.items[0]?.id
+      if (itemId) {
+        useGameStore.getState().swapEquipment(itemId)
+        expect(useGameStore.getState().message).toContain('full turn')
+      }
     })
   })
 })
