@@ -46,6 +46,16 @@
   color: var(--color-accent-dark);
 }
 
+.level {
+  font-weight: 600;
+  color: var(--color-forest);
+}
+
+.xp {
+  font-weight: 600;
+  color: var(--color-meadow);
+}
+
 .turn {
   font-style: italic;
 }
@@ -76,6 +86,21 @@
   font-size: 0.9rem;
   font-style: italic;
   color: var(--color-text-muted);
+}
+
+.legacyNpc {
+  padding: var(--spacing-md);
+  background-color: var(--color-village);
+  color: var(--color-text);
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  font-style: italic;
+}
+
+.legacyNpc strong {
+  font-style: normal;
+  color: var(--color-forest-dark);
 }
 
 .message {
@@ -235,4 +260,9 @@
 .fleeButton {
   background-color: var(--color-water);
   color: var(--color-text);
+}
+
+.retireButton {
+  background-color: var(--color-earth-dark);
+  font-size: 0.85rem;
 }

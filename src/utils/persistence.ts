@@ -1,9 +1,10 @@
 import { get, set, del } from 'idb-keyval'
-import type { GameState, Item } from '../engine/types'
+import type { GameState, Item, LeaderboardEntry } from '../engine/types'
 
 const SAVE_KEY = 'game-save'
+const LEADERBOARD_KEY = 'leaderboard'
 
-export const CURRENT_SAVE_VERSION = 3
+export const CURRENT_SAVE_VERSION = 4
 
 export interface SaveData {
   world: GameState['world']
@@ -36,6 +37,11 @@ const migrations: Record<number, (data: any) => any> = {
       if (data.activeEnemy.maxHp === undefined) data.activeEnemy.maxHp = data.activeEnemy.strength
       if (!data.activeEnemy.statusEffects) data.activeEnemy.statusEffects = []
     }
+    return data
+  },
+  3: (data) => {
+    if (!data.player.species) data.player.species = 'fox'
+    if (data.player.xp === undefined) data.player.xp = 0
     return data
   },
 }
@@ -72,6 +78,15 @@ export async function loadGame(): Promise<SaveData | null> {
 
 export async function clearSave(): Promise<void> {
   await del(SAVE_KEY)
+}
+
+export async function saveLeaderboard(entries: LeaderboardEntry[]): Promise<void> {
+  await set(LEADERBOARD_KEY, entries)
+}
+
+export async function loadLeaderboard(): Promise<LeaderboardEntry[]> {
+  const raw = await get<LeaderboardEntry[]>(LEADERBOARD_KEY)
+  return raw ?? []
 }
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null

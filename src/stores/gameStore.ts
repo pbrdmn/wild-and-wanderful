@@ -1,6 +1,6 @@
 import { create } from 'zustand'
-import type { GameState, Player, World, GamePhase, ActiveEnemy, Item, Skill } from '../engine/types'
-import { DEFAULT_MAX_AP, Direction, DIRECTION_OFFSETS } from '../engine/types'
+import type { GameState, Player, World, GamePhase, ActiveEnemy, Item, Skill, AnimalSpecies, LeaderboardEntry } from '../engine/types'
+import { DEFAULT_MAX_AP, Direction, DIRECTION_OFFSETS, AnimalSpecies as AnimalSpeciesEnum } from '../engine/types'
 import { generateWorld, findStartingPosition } from '../engine/world'
 import { movePlayer as engineMovePlayer, endTurn as engineEndTurn, getAdjacentTiles, canMoveTo } from '../engine/movement'
 import type { AdjacentTile } from '../engine/movement'
@@ -29,17 +29,20 @@ import {
   getCombatOutcome,
 } from '../engine/combat'
 import { checkTileEncounter } from '../engine/enemies'
+import { calculateXpReward, checkLevelUp } from '../engine/progression'
+import { createLeaderboardEntry, addToLeaderboard } from '../engine/leaderboard'
 import { getTileDescription, getPeripheralGlimpse } from '../engine/biomes'
 import { createRng } from '../engine/random'
-import { debouncedSave, loadGame, clearSave } from '../utils/persistence'
+import { debouncedSave, loadGame, clearSave, saveLeaderboard, loadLeaderboard as loadLeaderboardFromStorage } from '../utils/persistence'
 import type { SaveData } from '../utils/persistence'
 
-export type ViewMode = 'scene' | 'map' | 'inventory' | 'intro' | 'skills'
+export type ViewMode = 'scene' | 'map' | 'inventory' | 'intro' | 'skills' | 'runEnd' | 'leaderboard'
 
 interface GameActions {
   initGame: (seed?: number) => void
   loadSavedGame: () => Promise<boolean>
   newGame: (seed?: number) => void
+  setCharacter: (name: string, species: AnimalSpecies) => void
   movePlayer: (x: number, y: number) => boolean
   endTurn: () => void
   setView: (view: ViewMode) => void
@@ -54,6 +57,10 @@ interface GameActions {
   flee: () => void
   unlockSkill: (skillId: string) => void
   setActiveSkills: (skillIds: string[]) => void
+  retire: () => void
+  completeQuest: () => void
+  saveHeroToLeaderboard: () => Promise<void>
+  loadLeaderboard: () => Promise<void>
 }
 
 interface GameDerived {
@@ -75,17 +82,24 @@ interface GameStore extends GameState, GameActions, GameDerived {
   playerDodgeChance: number
   playerHasShield: boolean
   previousPosition: { x: number; y: number } | null
+  leaderboard: LeaderboardEntry[]
 }
 
-function createInitialPlayer(world: World): Player {
+function createInitialPlayer(
+  world: World,
+  name = 'Wanderer',
+  species: AnimalSpecies = AnimalSpeciesEnum.Fox,
+): Player {
   const start = findStartingPosition(world)
   return {
     x: start.x,
     y: start.y,
     ap: DEFAULT_MAX_AP,
     maxAp: DEFAULT_MAX_AP,
-    name: 'Wanderer',
+    name,
+    species,
     level: 1,
+    xp: 0,
     wounds: 0,
     maxWounds: 1,
     inventory: { items: [], equippedItemId: null, maxSlots: 5 },
@@ -118,10 +132,12 @@ export const useGameStore = create<GameStore>((set, get) => {
     playerDodgeChance: 0,
     playerHasShield: false,
     previousPosition: null,
+    leaderboard: [],
 
     initGame: (seed?: number) => {
       const actualSeed = seed ?? Date.now()
-      const world = generateWorld(actualSeed)
+      const { leaderboard } = get()
+      const world = generateWorld(actualSeed, undefined, leaderboard)
       const player = createInitialPlayer(world)
       actionRng = createRng(actualSeed + 1)
       const heirloomRng = createRng(actualSeed + 2)
@@ -174,6 +190,11 @@ export const useGameStore = create<GameStore>((set, get) => {
       get().initGame(seed)
     },
 
+    setCharacter: (name: string, species: AnimalSpecies) => {
+      const { player } = get()
+      set({ player: { ...player, name, species } })
+    },
+
     movePlayer: (x: number, y: number): boolean => {
       const { player, world } = get()
       const result = engineMovePlayer(player, x, y, world)
@@ -191,6 +212,12 @@ export const useGameStore = create<GameStore>((set, get) => {
         world: { ...world, tiles: newTiles },
         message: null,
         previousPosition: { x: player.x, y: player.y },
+      }
+
+      if (x === world.questMarker.x && y === world.questMarker.y) {
+        set(updates)
+        get().completeQuest()
+        return true
       }
 
       const encounter = checkTileEncounter(result.tile, actionRng)
@@ -361,12 +388,17 @@ export const useGameStore = create<GameStore>((set, get) => {
       const outcome = getCombatOutcome(result.player, result.enemy)
 
       if (outcome === 'victory') {
+        const xp = calculateXpReward(activeEnemy)
+        let victoryPlayer = { ...result.player, xp: result.player.xp + xp }
+        const levelResult = checkLevelUp(victoryPlayer)
+        victoryPlayer = levelResult.player
+        const levelMsg = levelResult.leveled ? ` You are now level ${levelResult.newLevel}!` : ''
         set({
-          player: result.player,
+          player: victoryPlayer,
           activeEnemy: undefined,
           gamePhase: 'exploring',
           combatLog: [],
-          message: newLog[newLog.length - 1],
+          message: `${newLog[newLog.length - 1]} (+${xp} XP)${levelMsg}`,
           playerDodgeChance: 0,
           playerHasShield: false,
         })
@@ -426,12 +458,17 @@ export const useGameStore = create<GameStore>((set, get) => {
       const outcome = getCombatOutcome(result.player, result.enemy)
 
       if (outcome === 'victory') {
+        const xp = calculateXpReward(activeEnemy)
+        let victoryPlayer = { ...result.player, xp: result.player.xp + xp }
+        const levelResult = checkLevelUp(victoryPlayer)
+        victoryPlayer = levelResult.player
+        const levelMsg = levelResult.leveled ? ` You are now level ${levelResult.newLevel}!` : ''
         set({
-          player: result.player,
+          player: victoryPlayer,
           activeEnemy: undefined,
           gamePhase: 'exploring',
           combatLog: [],
-          message: newLog[newLog.length - 1],
+          message: `${newLog[newLog.length - 1]} (+${xp} XP)${levelMsg}`,
           playerDodgeChance: 0,
           playerHasShield: false,
         })
@@ -466,12 +503,17 @@ export const useGameStore = create<GameStore>((set, get) => {
       }
 
       if (postEnemyOutcome === 'victory') {
+        const xp = calculateXpReward(activeEnemy)
+        let victoryPlayer = { ...enemyResult.player, xp: enemyResult.player.xp + xp }
+        const levelResult = checkLevelUp(victoryPlayer)
+        victoryPlayer = levelResult.player
+        const levelMsg = levelResult.leveled ? ` You are now level ${levelResult.newLevel}!` : ''
         set({
-          player: enemyResult.player,
+          player: victoryPlayer,
           activeEnemy: undefined,
           gamePhase: 'exploring',
           combatLog: [],
-          message: fullLog[fullLog.length - 1],
+          message: `${fullLog[fullLog.length - 1]} (+${xp} XP)${levelMsg}`,
           playerDodgeChance: 0,
           playerHasShield: false,
         })
@@ -567,6 +609,48 @@ export const useGameStore = create<GameStore>((set, get) => {
         player: result.player,
         message: 'Active skills updated.',
       })
+    },
+
+    retire: () => {
+      const { player, turnNumber, leaderboard } = get()
+      const entry = createLeaderboardEntry(player, turnNumber, false)
+      const updated = addToLeaderboard(leaderboard, entry)
+      saveLeaderboard(updated)
+      clearSave()
+      set({
+        gamePhase: 'retired',
+        view: 'runEnd' as ViewMode,
+        message: 'You retire from adventuring, your tales told by the fireside.',
+        leaderboard: updated,
+      })
+    },
+
+    completeQuest: () => {
+      const { player, turnNumber, leaderboard } = get()
+      const entry = createLeaderboardEntry(player, turnNumber, true)
+      const updated = addToLeaderboard(leaderboard, entry)
+      saveLeaderboard(updated)
+      clearSave()
+      set({
+        gamePhase: 'questComplete',
+        view: 'runEnd' as ViewMode,
+        message: 'You have reached the end of your quest!',
+        leaderboard: updated,
+      })
+    },
+
+    saveHeroToLeaderboard: async () => {
+      const { player, turnNumber, gamePhase, leaderboard } = get()
+      const questCompleted = gamePhase === 'questComplete'
+      const entry = createLeaderboardEntry(player, turnNumber, questCompleted)
+      const updated = addToLeaderboard(leaderboard, entry)
+      await saveLeaderboard(updated)
+      set({ leaderboard: updated })
+    },
+
+    loadLeaderboard: async () => {
+      const entries = await loadLeaderboardFromStorage()
+      set({ leaderboard: entries })
     },
 
     setView: (view: ViewMode) => {

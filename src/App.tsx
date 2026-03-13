@@ -5,6 +5,8 @@ import { MapView } from './components/MapView'
 import { IntroView } from './components/IntroView'
 import { InventoryView } from './components/InventoryView'
 import { SkillsView } from './components/SkillsView'
+import { RunEndView } from './components/RunEndView'
+import { LeaderboardView } from './components/LeaderboardView'
 import styles from './App.module.css'
 
 function App() {
@@ -13,14 +15,16 @@ function App() {
   const loaded = useGameStore((s) => s.loaded)
   const loadSavedGame = useGameStore((s) => s.loadSavedGame)
   const initGame = useGameStore((s) => s.initGame)
+  const loadLeaderboardAction = useGameStore((s) => s.loadLeaderboard)
 
   useEffect(() => {
+    loadLeaderboardAction()
     loadSavedGame().then((restored) => {
       if (!restored) {
         initGame()
       }
     })
-  }, [loadSavedGame, initGame])
+  }, [loadSavedGame, initGame, loadLeaderboardAction])
 
   if (!loaded) {
     return (
@@ -28,6 +32,22 @@ function App() {
         <div className={styles.loading} data-testid="loading">
           Loading...
         </div>
+      </div>
+    )
+  }
+
+  if (view === 'leaderboard') {
+    return (
+      <div className={styles.app} data-testid="leaderboard-screen">
+        <LeaderboardView />
+      </div>
+    )
+  }
+
+  if (gamePhase === 'questComplete' || gamePhase === 'retired') {
+    return (
+      <div className={styles.app} data-testid="run-end-screen">
+        <RunEndView />
       </div>
     )
   }

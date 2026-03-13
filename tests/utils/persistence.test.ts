@@ -36,7 +36,7 @@ function makeSaveData(): SaveData {
     player: {
       x: 1, y: 1,
       ap: DEFAULT_MAX_AP, maxAp: DEFAULT_MAX_AP,
-      name: 'Tester', level: 1,
+      name: 'Tester', species: 'fox', level: 1, xp: 0,
       wounds: 0, maxWounds: 1,
       inventory: { items: [], equippedItemId: null, maxSlots: 5 },
       unlockedSkillIds: [], activeSkillIds: [], maxActiveSkills: 2,
@@ -180,6 +180,28 @@ describe('persistence', () => {
       const result = migrateSaveData(v1)
       expect(result).not.toBeNull()
       expect(result!.saveVersion).toBe(CURRENT_SAVE_VERSION)
+    })
+
+    it('migrates a v1 save through all migrations including v3->v4 (species, xp)', () => {
+      const v1 = makeV1SaveData()
+      const result = migrateSaveData(v1)
+      expect(result).not.toBeNull()
+      expect(result!.player.species).toBe('fox')
+      expect(result!.player.xp).toBe(0)
+    })
+
+    it('migrates a v3 save to v4 (backfills species and xp)', () => {
+      const v3: Record<string, unknown> = {
+        ...makeSaveData(),
+        saveVersion: 3,
+      }
+      delete (v3 as any).player.species
+      delete (v3 as any).player.xp
+      const result = migrateSaveData(v3)
+      expect(result).not.toBeNull()
+      expect(result!.saveVersion).toBe(CURRENT_SAVE_VERSION)
+      expect(result!.player.species).toBe('fox')
+      expect(result!.player.xp).toBe(0)
     })
   })
 
