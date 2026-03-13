@@ -1,11 +1,8 @@
 import type { Player, ActiveEnemy } from './types'
 import { AP_COST_REST, AMBUSH_CHANCE } from './types'
+import { ENEMY_REGISTRY, createActiveEnemy } from './enemies'
 
-const AMBUSH_ENEMIES: readonly { name: string; strength: number }[] = [
-  { name: 'Shadow Wolf', strength: 1 },
-  { name: 'Bandit Rat', strength: 1 },
-  { name: 'Thorn Sprite', strength: 1 },
-]
+const AMBUSH_ENEMY_IDS = ['shadow-wolf', 'bandit-rat', 'thorn-sprite'] as const
 
 export interface RestResult {
   success: boolean
@@ -37,8 +34,9 @@ export function rest(player: Player, rng: () => number): RestResult {
 
   const ambushRoll = rng()
   if (ambushRoll < AMBUSH_CHANCE) {
-    const enemyTemplate = AMBUSH_ENEMIES[Math.floor(rng() * AMBUSH_ENEMIES.length)]
-    const enemy: ActiveEnemy = { ...enemyTemplate, hasInitiative: true }
+    const ambushTemplates = ENEMY_REGISTRY.filter((e) => AMBUSH_ENEMY_IDS.includes(e.id as any))
+    const template = ambushTemplates[Math.floor(rng() * ambushTemplates.length)]
+    const enemy: ActiveEnemy = createActiveEnemy(template, true)
     return {
       success: true,
       player: updatedPlayer,
