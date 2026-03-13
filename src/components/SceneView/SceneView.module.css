@@ -123,12 +123,116 @@
   color: var(--color-earth);
 }
 
-.combatBanner {
-  padding: var(--spacing-sm) var(--spacing-md);
+.combatPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
   background-color: var(--color-earth);
   color: var(--color-parchment);
+  border-radius: var(--radius-md);
+}
+
+.enemyInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.enemyName {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.statusEffects {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.statusIcon {
+  font-size: 1rem;
+}
+
+.hpBarTrack {
+  position: relative;
+  height: 20px;
+  background-color: rgba(0, 0, 0, 0.3);
   border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.hpBarFill {
+  height: 100%;
+  background-color: var(--color-accent);
+  border-radius: var(--radius-sm);
+  transition: width 200ms ease;
+}
+
+.hpBarLabel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-parchment);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.combatLog {
+  max-height: 100px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--spacing-xs) 0;
+}
+
+.combatLogEntry {
+  font-size: 0.8rem;
+  font-style: italic;
+  color: var(--color-parchment);
+  opacity: 0.85;
+}
+
+.combatActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+}
+
+.combatButton {
+  flex: 1;
+  min-width: 80px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
   font-weight: 600;
-  font-size: 0.95rem;
-  text-align: center;
+  color: var(--color-earth);
+  background-color: var(--color-parchment);
+  border: none;
+  border-radius: var(--radius-sm);
+  transition: background-color 150ms ease, transform 100ms ease;
+  min-height: 44px;
+}
+
+.combatButton:active:not(:disabled) {
+  background-color: var(--color-parchment-dark);
+  transform: scale(0.97);
+}
+
+.combatButton.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.skillButton {
+  background-color: var(--color-meadow);
+  color: var(--color-text);
+}
+
+.fleeButton {
+  background-color: var(--color-water);
+  color: var(--color-text);
 }
