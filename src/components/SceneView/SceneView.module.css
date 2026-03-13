@@ -204,52 +204,6 @@
   animation: fadeSlideIn 300ms ease both;
 }
 
-.enemyInfo {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-}
-
-.enemyName {
-  font-weight: 700;
-  font-size: 1.1rem;
-}
-
-.statusEffects {
-  display: flex;
-  gap: var(--spacing-xs);
-}
-
-.statusIcon {
-  font-size: 1rem;
-}
-
-.hpBarTrack {
-  position: relative;
-  height: 20px;
-  background-color: rgba(0, 0, 0, 0.3);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-}
-
-.hpBarFill {
-  height: 100%;
-  background-color: var(--color-accent);
-  border-radius: var(--radius-sm);
-  transition: width 300ms ease;
-}
-
-.hpBarLabel {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--color-parchment);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-}
-
 .combatLog {
   max-height: 100px;
   overflow-y: auto;

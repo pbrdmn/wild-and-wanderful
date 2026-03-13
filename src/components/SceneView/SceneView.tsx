@@ -3,23 +3,10 @@ import { useGameStore } from '../../stores/gameStore'
 import { getBiomeData } from '../../engine/biomes'
 import { canMoveTo } from '../../engine/movement'
 import { AP_COST_ATTACK, AP_COST_FLEE, DIRECTION_OFFSETS, Direction } from '../../engine/types'
-import type { AnimalSpecies as AnimalSpeciesType } from '../../engine/types'
+import { SPECIES_LABELS } from '../../sprites/spriteConfig'
 import { playSound, isMuted, setMuted } from '../../utils/audio'
+import { BattleStage } from '../BattleStage/BattleStage'
 import styles from './SceneView.module.css'
-
-const SPECIES_LABELS: Record<AnimalSpeciesType, string> = {
-  fox: 'Fox', bear: 'Bear', mouse: 'Mouse', raccoon: 'Raccoon',
-  cat: 'Cat', bird: 'Bird', frog: 'Frog',
-}
-
-function StatusEffectIcon({ type }: { type: string }) {
-  const labels: Record<string, string> = {
-    daze: '💫',
-    poison: '🧪',
-    shield: '🛡️',
-  }
-  return <span className={styles.statusIcon} title={type}>{labels[type] ?? '?'}</span>
-}
 
 export function SceneView() {
   const player = useGameStore((s) => s.player)
@@ -116,6 +103,14 @@ export function SceneView() {
       </header>
 
       <main className={styles.content}>
+        <BattleStage
+          terrain={currentTile.terrain}
+          playerSpecies={player.species}
+          activeEnemy={activeEnemy}
+          legacyNpc={currentTile.legacyNpc}
+          inCombat={inCombat}
+        />
+
         <p className={styles.description} data-testid="tile-description">
           {description}
         </p>
@@ -163,24 +158,6 @@ export function SceneView() {
 
         {inCombat && (
           <div className={styles.combatPanel} data-testid="combat-panel">
-            <div className={styles.enemyInfo} data-testid="enemy-info">
-              <span className={styles.enemyName}>{activeEnemy.name}</span>
-              {activeEnemy.statusEffects.length > 0 && (
-                <span className={styles.statusEffects} data-testid="enemy-status-effects">
-                  {activeEnemy.statusEffects.map((e, i) => (
-                    <StatusEffectIcon key={`${e.type}-${i}`} type={e.type} />
-                  ))}
-                </span>
-              )}
-            </div>
-            <div className={styles.hpBarTrack} data-testid="enemy-hp-bar">
-              <div
-                className={styles.hpBarFill}
-                style={{ width: `${Math.max(0, (activeEnemy.hp / activeEnemy.maxHp) * 100)}%` }}
-              />
-              <span className={styles.hpBarLabel}>{activeEnemy.hp}/{activeEnemy.maxHp}</span>
-            </div>
-
             {combatLog.length > 0 && (
               <div className={styles.combatLog} data-testid="combat-log">
                 {combatLog.map((msg, i) => (
