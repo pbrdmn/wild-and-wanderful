@@ -5,11 +5,19 @@ import { SceneView } from '../../src/components/SceneView'
 import { useGameStore } from '../../src/stores/gameStore'
 import { DEFAULT_MAX_AP } from '../../src/engine/types'
 
+function initAndSkipIntro(seed: number) {
+  useGameStore.getState().initGame(seed)
+  const { offeredItems } = useGameStore.getState()
+  if (offeredItems.length > 0) {
+    useGameStore.getState().selectItem(offeredItems[0].id)
+  }
+}
+
 describe('SceneView', () => {
   const TEST_SEED = 42
 
   beforeEach(() => {
-    useGameStore.getState().initGame(TEST_SEED)
+    initAndSkipIntro(TEST_SEED)
   })
 
   it('renders the current tile description', () => {
@@ -58,11 +66,23 @@ describe('SceneView', () => {
     expect(screen.getByTestId('rest-button')).toBeInTheDocument()
   })
 
+  it('has an Inventory button', () => {
+    render(<SceneView />)
+    expect(screen.getByTestId('open-inventory-button')).toBeInTheDocument()
+  })
+
   it('switches to map view when Open Map is clicked', async () => {
     const user = userEvent.setup()
     render(<SceneView />)
     await user.click(screen.getByTestId('open-map-button'))
     expect(useGameStore.getState().view).toBe('map')
+  })
+
+  it('switches to inventory view when Pack is clicked', async () => {
+    const user = userEvent.setup()
+    render(<SceneView />)
+    await user.click(screen.getByTestId('open-inventory-button'))
+    expect(useGameStore.getState().view).toBe('inventory')
   })
 
   it('increments turn and resets AP when End Turn is clicked', async () => {
@@ -75,7 +95,7 @@ describe('SceneView', () => {
   })
 
   it('displays a game message when present', () => {
-    useGameStore.getState().initGame(TEST_SEED)
+    initAndSkipIntro(TEST_SEED)
     render(<SceneView />)
     const msg = screen.queryByTestId('game-message')
     if (msg) {
@@ -122,5 +142,27 @@ describe('SceneView', () => {
     render(<SceneView />)
     await user.click(screen.getByTestId('rest-button'))
     expect(useGameStore.getState().player.wounds).toBe(0)
+  })
+
+  it('shows the equipped item name', () => {
+    render(<SceneView />)
+    const equipped = screen.getByTestId('equipped-display')
+    expect(equipped).toBeInTheDocument()
+    const { player } = useGameStore.getState()
+    const item = player.inventory.items.find((i) => i.id === player.inventory.equippedItemId)
+    if (item) {
+      expect(equipped.textContent).toContain(item.name)
+    }
+  })
+
+  it('hides equipped bar when nothing is equipped', () => {
+    useGameStore.setState({
+      player: {
+        ...useGameStore.getState().player,
+        inventory: { ...useGameStore.getState().player.inventory, equippedItemId: null },
+      },
+    })
+    render(<SceneView />)
+    expect(screen.queryByTestId('equipped-display')).not.toBeInTheDocument()
   })
 })

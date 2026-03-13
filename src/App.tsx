@@ -2,10 +2,13 @@ import { useEffect } from 'react'
 import { useGameStore } from './stores/gameStore'
 import { SceneView } from './components/SceneView'
 import { MapView } from './components/MapView'
+import { IntroView } from './components/IntroView'
+import { InventoryView } from './components/InventoryView'
 import styles from './App.module.css'
 
 function App() {
   const view = useGameStore((s) => s.view)
+  const gamePhase = useGameStore((s) => s.gamePhase)
   const loaded = useGameStore((s) => s.loaded)
   const loadSavedGame = useGameStore((s) => s.loadSavedGame)
   const initGame = useGameStore((s) => s.initGame)
@@ -28,19 +31,33 @@ function App() {
     )
   }
 
+  if (gamePhase === 'intro') {
+    return (
+      <div className={styles.app} data-testid="intro-screen">
+        <IntroView />
+      </div>
+    )
+  }
+
   return (
     <div className={styles.app}>
-      <div
-        className={`${styles.viewContainer} ${view === 'map' ? styles.mapActive : styles.sceneActive}`}
-        data-testid="view-container"
-      >
-        <div className={styles.view} data-testid="scene-panel">
-          <SceneView />
+      {view === 'inventory' ? (
+        <div data-testid="inventory-screen">
+          <InventoryView />
         </div>
-        <div className={styles.view} data-testid="map-panel">
-          <MapView />
+      ) : (
+        <div
+          className={`${styles.viewContainer} ${view === 'map' ? styles.mapActive : styles.sceneActive}`}
+          data-testid="view-container"
+        >
+          <div className={styles.view} data-testid="scene-panel">
+            <SceneView />
+          </div>
+          <div className={styles.view} data-testid="map-panel">
+            <MapView />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

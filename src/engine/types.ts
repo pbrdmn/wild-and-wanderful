@@ -33,6 +33,29 @@ export interface World {
   questMarker: { x: number; y: number }
 }
 
+export const ItemCategory = {
+  Melee: 'melee',
+  Ranged: 'ranged',
+  Magic: 'magic',
+} as const
+
+export type ItemCategory = (typeof ItemCategory)[keyof typeof ItemCategory]
+
+export interface Item {
+  id: string
+  name: string
+  category: ItemCategory
+  description: string
+  attackPower: number
+  flavourText: string
+}
+
+export interface Inventory {
+  items: Item[]
+  equippedItemId: string | null
+  maxSlots: number
+}
+
 export interface Player {
   x: number
   y: number
@@ -42,6 +65,7 @@ export interface Player {
   level: number
   wounds: number
   maxWounds: number
+  inventory: Inventory
 }
 
 export interface Enemy {
@@ -53,7 +77,7 @@ export interface ActiveEnemy extends Enemy {
   hasInitiative: boolean
 }
 
-export type GamePhase = 'exploring' | 'combat' | 'resting'
+export type GamePhase = 'intro' | 'exploring' | 'combat' | 'resting'
 
 export interface GameState {
   world: World
@@ -85,5 +109,9 @@ export const AP_COST_MOVE = 1
 export const AP_COST_REST = 1
 export const AP_COST_SEARCH = 1
 
+export const AP_COST_SWAP = DEFAULT_MAX_AP
+
 export const AMBUSH_CHANCE = 0.1
 export const SEARCH_REVEAL_CHANCE = 0.3
+
+export const DEFAULT_INVENTORY_SLOTS = 5
