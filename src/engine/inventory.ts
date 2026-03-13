@@ -89,6 +89,6 @@ export function swapEquipment(player: Player, itemId: string): InventoryResult {
 
 export function getEquippedItem(player: Player): Item | null {
   const { inventory } = player
-  if (!inventory.equippedItemId) return null
+  if (!inventory?.equippedItemId) return null
   return inventory.items.find((i) => i.id === inventory.equippedItemId) ?? null
 }

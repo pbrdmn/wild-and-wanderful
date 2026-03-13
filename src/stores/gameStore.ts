@@ -114,9 +114,12 @@ export const useGameStore = create<GameStore>((set, get) => {
         return false
       }
       actionRng = createRng(save.gameSeed + 1 + save.turnNumber)
+      const player = save.player.inventory
+        ? save.player
+        : { ...save.player, inventory: { items: [], equippedItemId: null, maxSlots: 5 } }
       set({
         world: save.world,
-        player: save.player,
+        player,
         turnNumber: save.turnNumber,
         gamePhase: save.gamePhase,
         activeEnemy: save.activeEnemy,
