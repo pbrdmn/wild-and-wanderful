@@ -84,7 +84,7 @@ export function SceneView() {
           <div className={styles.legacyNpc} data-testid="legacy-npc">
             <p>
               You meet <strong>{currentTile.legacyNpc.name}</strong> the{' '}
-              {SPECIES_LABELS[currentTile.legacyNpc.species]}, a retired adventurer who{' '}
+              {SPECIES_LABELS[currentTile.legacyNpc.species]}, a retired wanderer who{' '}
               {currentTile.legacyNpc.questCompleted
                 ? 'completed the great quest'
                 : 'retired peacefully'}.

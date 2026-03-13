@@ -93,7 +93,7 @@ export function IntroView() {
           </div>
 
           <div className={styles.nameSection} data-testid="name-section">
-            <label className={styles.nameLabel} htmlFor="character-name">Name Your Character</label>
+            <label className={styles.nameLabel} htmlFor="character-name">Name Your Wanderer</label>
             <input
               id="character-name"
               className={styles.nameInput}
@@ -106,7 +106,7 @@ export function IntroView() {
             />
           </div>
 
-          <p className={styles.sectionLabel}>Choose Your Character</p>
+          <p className={styles.sectionLabel}>Choose Your Wanderer</p>
           <div className={styles.speciesGrid} data-testid="species-choices">
             {SPECIES_LIST.map((s) => (
               <button
@@ -139,7 +139,7 @@ export function IntroView() {
               onClick={() => setView('leaderboard')}
               data-testid="hall-of-heroes-button"
             >
-              Hall of Heroes
+              Hall of Wanderers
             </button>
           )}
         </main>
@@ -161,7 +161,7 @@ export function IntroView() {
           </p>
           <p>
             &ldquo;Ah, another brave soul setting off into the wilds! Here &mdash; take one of these.
-            They belonged to heroes who came before you. Choose wisely, little one.&rdquo;
+            They belonged to wanderers who came before you. Choose wisely, little one.&rdquo;
           </p>
         </div>
 

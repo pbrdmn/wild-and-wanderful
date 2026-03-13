@@ -45,7 +45,7 @@ export function RunEndView() {
     <div className={styles.runEndView}>
       <header className={styles.header}>
         <h1 className={styles.title}>
-          {questCompleted ? 'Quest Complete!' : 'A Hero Retires'}
+          {questCompleted ? 'Quest Complete!' : 'A Wanderer Retires'}
         </h1>
       </header>
 
@@ -82,7 +82,7 @@ export function RunEndView() {
           onClick={() => setView('leaderboard')}
           data-testid="view-leaderboard-button"
         >
-          Hall of Heroes
+          Hall of Wanderers
         </button>
         <button
           className={`${styles.actionButton} ${styles.newGameButton}`}
