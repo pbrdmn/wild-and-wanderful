@@ -1,0 +1,77 @@
+:root {
+  --color-parchment: #f5f0e8;
+  --color-parchment-dark: #e8e0d0;
+  --color-forest: #5b7a5e;
+  --color-forest-dark: #3d5a40;
+  --color-meadow: #a8b87a;
+  --color-water: #7ba7c2;
+  --color-water-dark: #5a8aaa;
+  --color-earth: #9c7a5a;
+  --color-earth-dark: #7a5c3f;
+  --color-text: #2c2c2c;
+  --color-text-muted: #6b6b6b;
+  --color-accent: #d4915e;
+  --color-accent-dark: #b8753f;
+  --color-danger: #c26b6b;
+  --color-village: #d4a76a;
+  --color-mountain: #8a8a8a;
+  --color-swamp: #6b7a5a;
+  --color-road: #c8b896;
+  --color-fog: #c8c0b4;
+
+  --font-body: 'Lora', Georgia, 'Times New Roman', serif;
+  --font-heading: 'Cinzel', 'Lora', Georgia, serif;
+
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --transition-page: 300ms ease-in-out;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background-color: var(--color-parchment);
+  line-height: 1.6;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-heading);
+  line-height: 1.2;
+}
+
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+  touch-action: manipulation;
+}
