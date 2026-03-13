@@ -49,6 +49,7 @@ function createInitialPlayer(world: World): Player {
     level: 1,
     wounds: 0,
     maxWounds: 1,
+    inventory: { items: [], equippedItemId: null, maxSlots: 5 },
   }
 }
 
