@@ -1,0 +1,27 @@
+.app {
+  width: 100%;
+  min-height: 100dvh;
+  overflow: hidden;
+  position: relative;
+}
+
+.viewContainer {
+  display: flex;
+  width: 200%;
+  min-height: 100dvh;
+  transition: transform var(--transition-page);
+}
+
+.sceneActive {
+  transform: translateX(0);
+}
+
+.mapActive {
+  transform: translateX(-50%);
+}
+
+.view {
+  width: 50%;
+  min-height: 100dvh;
+  flex-shrink: 0;
+}
