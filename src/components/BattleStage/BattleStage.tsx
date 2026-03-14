@@ -43,8 +43,7 @@ export function BattleStage({
 
   return (
     <div className={styles.stage} data-testid="battle-stage">
-      <div className={styles.background} style={{ background: bg.background }} />
-      <div className={styles.ground} style={{ backgroundColor: bg.groundColor }} />
+      <div className={styles.background} style={{ backgroundImage: `url(${bg.imageUrl})` }} />
 
       {showEnemy && activeEnemy && (
         <>
@@ -97,7 +96,6 @@ export function BattleStage({
           style={getBackSpriteStyle(playerSpecies)}
           data-testid="player-sprite"
         />
-        <div className={styles.playerShadow} />
       </div>
     </div>
   )

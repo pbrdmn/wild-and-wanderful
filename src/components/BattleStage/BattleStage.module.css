@@ -11,16 +11,11 @@
   position: absolute;
   inset: 0;
   z-index: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
-.ground {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 35%;
-  z-index: 1;
-}
 
 .enemyPlatform {
   position: absolute;
@@ -117,26 +112,21 @@
 
 .playerPlatform {
   position: absolute;
-  bottom: 8%;
-  left: 8%;
+  bottom: -20%;
+  left: 0;
   z-index: 2;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.playerShadow {
-  width: 80px;
-  height: 18px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.2);
+  align-items: flex-start;
+  justify-content: flex-end;
+  width: 40%;
+  height: 80%;
 }
 
 .playerSprite {
-  width: 72px;
-  height: 72px;
-  image-rendering: pixelated;
+  width: 100%;
+  height: 100%;
+  image-rendering: auto;
 }
 
 .npcSprite {
