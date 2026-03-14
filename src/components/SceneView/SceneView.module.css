@@ -74,48 +74,6 @@
   animation: fadeSlideIn 400ms ease both;
 }
 
-.glimpses {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-md);
-  background-color: var(--color-parchment-dark);
-  border-radius: var(--radius-md);
-  animation: fadeSlideIn 400ms ease 100ms both;
-}
-
-.glimpse {
-  font-size: 0.9rem;
-  font-style: italic;
-  color: var(--color-text-muted);
-  text-align: left;
-}
-
-.glimpseLink {
-  display: block;
-  width: 100%;
-  background: none;
-  border: none;
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-family: inherit;
-  transition: background-color 150ms ease;
-  text-decoration: underline;
-  text-decoration-color: var(--color-forest);
-  text-underline-offset: 2px;
-  color: var(--color-forest-dark);
-  font-style: italic;
-}
-
-.glimpseLink:active {
-  background-color: var(--color-parchment);
-}
-
-.glimpseBlocked {
-  opacity: 0.6;
-  padding: var(--spacing-xs) var(--spacing-sm);
-}
 
 .legacyNpc {
   padding: var(--spacing-md);

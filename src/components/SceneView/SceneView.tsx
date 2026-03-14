@@ -6,6 +6,7 @@ import { AP_COST_ATTACK, AP_COST_FLEE, DIRECTION_OFFSETS, Direction } from '../.
 import { SPECIES_LABELS } from '../../sprites/spriteConfig'
 import { playSound, isMuted, setMuted } from '../../utils/audio'
 import { BattleStage } from '../BattleStage/BattleStage'
+import { DirectionalGrid } from '../DirectionalGrid'
 import styles from './SceneView.module.css'
 
 export function SceneView() {
@@ -129,31 +130,12 @@ export function SceneView() {
         )}
 
         {!inCombat && (
-          <div className={styles.glimpses} data-testid="peripheral-glimpses">
-            {glimpses.map((g) => {
-              const offset = DIRECTION_OFFSETS[g.direction as Direction]
-              const tx = player.x + offset.dx
-              const ty = player.y + offset.dy
-              const inBounds = tx >= 0 && tx < world.width && ty >= 0 && ty < world.height
-              const tile = inBounds ? world.tiles[ty][tx] : null
-              const passable = tile != null && canMoveTo(tile)
-
-              return passable ? (
-                <button
-                  key={g.direction}
-                  className={`${styles.glimpse} ${styles.glimpseLink}`}
-                  onClick={() => movePlayer(tx, ty)}
-                  data-testid={`glimpse-${g.direction}`}
-                >
-                  {g.text}
-                </button>
-              ) : (
-                <p key={g.direction} className={`${styles.glimpse} ${styles.glimpseBlocked}`} data-testid={`glimpse-${g.direction}`}>
-                  {g.text}
-                </p>
-              )
-            })}
-          </div>
+          <DirectionalGrid
+            glimpses={glimpses}
+            onMove={movePlayer}
+            playerX={player.x}
+            playerY={player.y}
+          />
         )}
 
         {inCombat && (
