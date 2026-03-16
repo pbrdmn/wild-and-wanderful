@@ -21,8 +21,13 @@ function buildSpriteStyle(species: AnimalSpeciesType, sheet: string): React.CSSP
   const bgSize = `${cfg.cols * 100}% 200%`
   const posX = cfg.cols > 1 ? (cfg.col / (cfg.cols - 1)) * 100 : 0
   const posY = cfg.row * 100
+  
+  // Add base path for GitHub Pages deployment
+  const basePath = import.meta.env.PROD ? '/wild-and-wanderful' : ''
+  const spritePath = `${basePath}${sheet}`
+  
   return {
-    backgroundImage: `url(${sheet})`,
+    backgroundImage: `url(${spritePath})`,
     backgroundSize: bgSize,
     backgroundPosition: `${posX}% ${posY}%`,
     backgroundRepeat: 'no-repeat',
