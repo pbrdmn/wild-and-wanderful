@@ -135,6 +135,7 @@ export function SceneView() {
             onMove={movePlayer}
             playerX={player.x}
             playerY={player.y}
+            world={world}
           />
         )}
 
@@ -219,13 +220,6 @@ export function SceneView() {
               data-testid="open-skills-button"
             >
               Skills
-            </button>
-            <button
-              className={styles.actionButton}
-              onClick={search}
-              data-testid="search-button"
-            >
-              Search
             </button>
             <button
               className={`${styles.actionButton} ${!canRest ? styles.disabled : ''}`}

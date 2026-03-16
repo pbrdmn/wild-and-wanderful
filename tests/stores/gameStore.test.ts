@@ -449,8 +449,11 @@ describe('gameStore', () => {
       const equipped = useGameStore.getState().equippedItem()
       const skills = useGameStore.getState().availableSkills()
       if (equipped?.category === 'melee') {
-        expect(skills).toHaveLength(1)
-        expect(skills[0].id).toBe('heavy-strike')
+        // Should include Search (immediate use, no requirements) and Heavy Strike (melee)
+        expect(skills).toHaveLength(2)
+        const skillIds = skills.map(s => s.id)
+        expect(skillIds).toContain('search')
+        expect(skillIds).toContain('heavy-strike')
       }
     })
   })

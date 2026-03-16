@@ -104,8 +104,8 @@ function createInitialPlayer(
     wounds: 0,
     maxWounds: 1,
     inventory: { items: [], equippedItemId: null, maxSlots: 5 },
-    unlockedSkillIds: [],
-    activeSkillIds: [],
+    unlockedSkillIds: ['search'],
+    activeSkillIds: ['search'],
     maxActiveSkills: 2,
   }
 }
@@ -445,9 +445,8 @@ export const useGameStore = create<GameStore>((set, get) => {
     },
 
     useSkill: (skillId: string) => {
-      const { player, activeEnemy, combatLog, playerDodgeChance, playerHasShield } = get()
-      if (!activeEnemy) return
-
+      const { player, activeEnemy, combatLog, playerDodgeChance, playerHasShield, gamePhase } = get()
+      
       const skill = getSkillById(skillId)
       if (!skill) {
         set({ message: 'Unknown skill.' })
@@ -458,6 +457,36 @@ export const useGameStore = create<GameStore>((set, get) => {
         set({ message: 'Cannot use this skill right now.' })
         return
       }
+
+      // Handle immediate-use skills (like Search)
+      if (skill.immediateUse) {
+        if (gamePhase !== 'exploring') {
+          set({ message: 'Cannot use this skill right now.' })
+          return
+        }
+        
+        const searchResult = engineSearch(player, get().world, actionRng)
+        if (!searchResult.success) {
+          set({ message: searchResult.reason ?? 'Cannot search right now.' })
+          return
+        }
+
+        const dirLabel = searchResult.direction
+          ? searchResult.direction.charAt(0).toUpperCase() + searchResult.direction.slice(1)
+          : ''
+
+        set({
+          player: searchResult.player,
+          world: searchResult.world,
+          message: searchResult.foundPath
+            ? `You discovered a hidden path to the ${dirLabel}!`
+            : 'You search carefully but find nothing of note.',
+        })
+        return
+      }
+
+      // Handle combat skills
+      if (!activeEnemy) return
 
       const result = playerSkillAttack(player, activeEnemy, skill)
       if (!result.success) {

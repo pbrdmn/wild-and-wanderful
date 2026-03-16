@@ -1,4 +1,5 @@
 import { Direction, DIRECTION_OFFSETS } from '../../engine/types'
+import { canMoveTo } from '../../engine/movement'
 import styles from './DirectionalGrid.module.css'
 
 interface DirectionalGridProps {
@@ -6,34 +7,37 @@ interface DirectionalGridProps {
   onMove: (x: number, y: number) => void
   playerX: number
   playerY: number
+  world: any // World type
 }
 
-export function DirectionalGrid({ glimpses, onMove, playerX, playerY }: DirectionalGridProps) {
+export function DirectionalGrid({ glimpses, onMove, playerX, playerY, world }: DirectionalGridProps) {
   // Create a map of available directions for quick lookup
-  const availableDirections = new Map<Direction, { text: string; x: number; y: number }>()
+  const availableDirections = new Map<Direction, { text: string; x: number; y: number; isPassable: boolean }>()
   
   glimpses.forEach(g => {
     const offset = DIRECTION_OFFSETS[g.direction]
     const tx = playerX + offset.dx
     const ty = playerY + offset.dy
-    availableDirections.set(g.direction, { text: g.text, x: tx, y: ty })
+    const tile = world.tiles[ty][tx]
+    const isPassable = canMoveTo(tile)
+    availableDirections.set(g.direction, { text: g.text, x: tx, y: ty, isPassable })
   })
 
   const handleDirectionClick = (direction: Direction) => {
     const target = availableDirections.get(direction)
-    if (target) {
+    if (target && target.isPassable) {
       onMove(target.x, target.y)
     }
   }
 
   return (
-    <div className={styles.directionalGrid} role="group" aria-label="Movement directions">
+    <div className={styles.directionalGrid} role="group" aria-label="Movement directions" data-testid="peripheral-glimpses">
       <div className={styles.northRow}>
         <DirectionButton
           direction="north"
           label="North"
           onClick={() => handleDirectionClick(Direction.North)}
-          isAvailable={availableDirections.has(Direction.North)}
+          isAvailable={availableDirections.has(Direction.North) && !!availableDirections.get(Direction.North)?.isPassable}
           text={availableDirections.get(Direction.North)?.text}
         />
       </div>
@@ -43,14 +47,14 @@ export function DirectionalGrid({ glimpses, onMove, playerX, playerY }: Directio
           direction="west"
           label="West"
           onClick={() => handleDirectionClick(Direction.West)}
-          isAvailable={availableDirections.has(Direction.West)}
+          isAvailable={availableDirections.has(Direction.West) && !!availableDirections.get(Direction.West)?.isPassable}
           text={availableDirections.get(Direction.West)?.text}
         />
         <DirectionButton
           direction="east"
           label="East"
           onClick={() => handleDirectionClick(Direction.East)}
-          isAvailable={availableDirections.has(Direction.East)}
+          isAvailable={availableDirections.has(Direction.East) && !!availableDirections.get(Direction.East)?.isPassable}
           text={availableDirections.get(Direction.East)?.text}
         />
       </div>
@@ -60,7 +64,7 @@ export function DirectionalGrid({ glimpses, onMove, playerX, playerY }: Directio
           direction="south"
           label="South"
           onClick={() => handleDirectionClick(Direction.South)}
-          isAvailable={availableDirections.has(Direction.South)}
+          isAvailable={availableDirections.has(Direction.South) && !!availableDirections.get(Direction.South)?.isPassable}
           text={availableDirections.get(Direction.South)?.text}
         />
       </div>
