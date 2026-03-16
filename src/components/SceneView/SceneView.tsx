@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useGameStore } from '../../stores/gameStore'
 import { getBiomeData } from '../../engine/biomes'
-import { canMoveTo } from '../../engine/movement'
-import { AP_COST_ATTACK, AP_COST_FLEE, DIRECTION_OFFSETS, Direction } from '../../engine/types'
+import { AP_COST_ATTACK, AP_COST_FLEE } from '../../engine/types'
 import { SPECIES_LABELS } from '../../sprites/spriteConfig'
 import { playSound, isMuted, setMuted } from '../../utils/audio'
 import { BattleStage } from '../BattleStage/BattleStage'
+import { DirectionalGrid } from '../DirectionalGrid'
 import styles from './SceneView.module.css'
 
 export function SceneView() {
@@ -18,9 +18,8 @@ export function SceneView() {
   const setView = useGameStore((s) => s.setView)
   const endTurn = useGameStore((s) => s.endTurn)
   const storeRest = useGameStore((s) => s.rest)
-  const storeSearch = useGameStore((s) => s.search)
   const storeAttack = useGameStore((s) => s.attack)
-  const useSkill = useGameStore((s) => s.useSkill)
+  const activateSkill = useGameStore((s) => s.activateSkill)
   const flee = useGameStore((s) => s.flee)
   const retire = useGameStore((s) => s.retire)
   const currentTileDescription = useGameStore((s) => s.currentTileDescription)
@@ -42,10 +41,6 @@ export function SceneView() {
     playSound('move')
   }
 
-  const search = () => {
-    storeSearch()
-    playSound('tap')
-  }
 
   const rest = () => {
     storeRest()
@@ -129,31 +124,13 @@ export function SceneView() {
         )}
 
         {!inCombat && (
-          <div className={styles.glimpses} data-testid="peripheral-glimpses">
-            {glimpses.map((g) => {
-              const offset = DIRECTION_OFFSETS[g.direction as Direction]
-              const tx = player.x + offset.dx
-              const ty = player.y + offset.dy
-              const inBounds = tx >= 0 && tx < world.width && ty >= 0 && ty < world.height
-              const tile = inBounds ? world.tiles[ty][tx] : null
-              const passable = tile != null && canMoveTo(tile)
-
-              return passable ? (
-                <button
-                  key={g.direction}
-                  className={`${styles.glimpse} ${styles.glimpseLink}`}
-                  onClick={() => movePlayer(tx, ty)}
-                  data-testid={`glimpse-${g.direction}`}
-                >
-                  {g.text}
-                </button>
-              ) : (
-                <p key={g.direction} className={`${styles.glimpse} ${styles.glimpseBlocked}`} data-testid={`glimpse-${g.direction}`}>
-                  {g.text}
-                </p>
-              )
-            })}
-          </div>
+          <DirectionalGrid
+            glimpses={glimpses}
+            onMove={movePlayer}
+            playerX={player.x}
+            playerY={player.y}
+            world={world}
+          />
         )}
 
         {inCombat && (
@@ -177,11 +154,12 @@ export function SceneView() {
               </button>
               {skills.map((skill) => {
                 const canUse = player.ap >= skill.apCost
+                const handleUseSkill = () => activateSkill(skill.id)
                 return (
                   <button
                     key={skill.id}
                     className={`${styles.combatButton} ${styles.skillButton} ${!canUse ? styles.disabled : ''}`}
-                    onClick={() => useSkill(skill.id)}
+                    onClick={handleUseSkill}
                     disabled={!canUse}
                     data-testid={`skill-button-${skill.id}`}
                     title={skill.description}
@@ -237,13 +215,6 @@ export function SceneView() {
               data-testid="open-skills-button"
             >
               Skills
-            </button>
-            <button
-              className={styles.actionButton}
-              onClick={search}
-              data-testid="search-button"
-            >
-              Search
             </button>
             <button
               className={`${styles.actionButton} ${!canRest ? styles.disabled : ''}`}

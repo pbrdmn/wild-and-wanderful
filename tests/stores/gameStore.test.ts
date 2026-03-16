@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useGameStore } from '../../src/stores/gameStore'
-import { TerrainType, DEFAULT_MAX_AP, AP_COST_SWAP, AP_COST_ATTACK, ItemCategory } from '../../src/engine/types'
+import { TerrainType, DEFAULT_MAX_AP, AP_COST_ATTACK, ItemCategory } from '../../src/engine/types'
 import type { ActiveEnemy } from '../../src/engine/types'
 
 function initAndSkipIntro(seed: number) {
@@ -291,9 +291,6 @@ describe('gameStore', () => {
     })
 
     it('swapEquipment costs full AP', () => {
-      const { player } = useGameStore.getState()
-      const currentId = player.inventory.equippedItemId
-
       useGameStore.getState().initGame(TEST_SEED)
       const { offeredItems } = useGameStore.getState()
       useGameStore.getState().selectItem(offeredItems[0].id)
@@ -449,8 +446,11 @@ describe('gameStore', () => {
       const equipped = useGameStore.getState().equippedItem()
       const skills = useGameStore.getState().availableSkills()
       if (equipped?.category === 'melee') {
-        expect(skills).toHaveLength(1)
-        expect(skills[0].id).toBe('heavy-strike')
+        // Should include Search (immediate use, no requirements) and Heavy Strike (melee)
+        expect(skills).toHaveLength(2)
+        const skillIds = skills.map(s => s.id)
+        expect(skillIds).toContain('search')
+        expect(skillIds).toContain('heavy-strike')
       }
     })
   })

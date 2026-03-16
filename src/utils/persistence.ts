@@ -19,7 +19,7 @@ export interface SaveData {
 
 // Each migration transforms save data from version N to N+1.
 // Keys are the source version (the version being migrated FROM).
-const migrations: Record<number, (data: any) => any> = {
+const migrations: Record<number, (data: SaveData) => SaveData> = {
   1: (data) => {
     // Phase 3: backfill player.inventory for pre-Phase-3 saves
     if (!data.player.inventory) {
@@ -45,20 +45,24 @@ const migrations: Record<number, (data: any) => any> = {
     return data
   },
   4: (data) => {
-    data.combatRounds = data.turnNumber ?? 0
-    delete data.turnNumber
+    if ('turnNumber' in data) {
+      const turnNumber = (data as { turnNumber?: number }).turnNumber
+      data.combatRounds = turnNumber ?? 0
+      delete (data as { turnNumber?: number }).turnNumber
+    }
     return data
   },
 }
 
-export function migrateSaveData(raw: any): SaveData | null {
-  let version = raw.saveVersion ?? 1
+export function migrateSaveData(raw: SaveData | Record<string, unknown>): SaveData | null {
+  let version = (raw as { saveVersion?: number }).saveVersion
+  if (version === undefined) version = 1
 
   if (version > CURRENT_SAVE_VERSION) {
     return null
   }
 
-  let data = { ...raw }
+  let data = { ...raw } as SaveData
   while (version < CURRENT_SAVE_VERSION) {
     const migrate = migrations[version]
     if (!migrate) {
@@ -68,7 +72,7 @@ export function migrateSaveData(raw: any): SaveData | null {
     version++
   }
   data.saveVersion = CURRENT_SAVE_VERSION
-  return data as SaveData
+  return data
 }
 
 export async function saveGame(data: SaveData): Promise<void> {
@@ -76,13 +80,13 @@ export async function saveGame(data: SaveData): Promise<void> {
 }
 
 export async function loadGame(): Promise<SaveData | null> {
-  const raw = await get<any>(SAVE_KEY)
-  if (!raw) return null
-  return migrateSaveData(raw)
-}
-
-export async function clearSave(): Promise<void> {
-  await del(SAVE_KEY)
+  try {
+    const raw = await get<SaveData>(SAVE_KEY)
+    if (!raw) return null
+    return migrateSaveData(raw)
+  } catch {
+    return null
+  }
 }
 
 export async function saveLeaderboard(entries: LeaderboardEntry[]): Promise<void> {
@@ -92,6 +96,10 @@ export async function saveLeaderboard(entries: LeaderboardEntry[]): Promise<void
 export async function loadLeaderboard(): Promise<LeaderboardEntry[]> {
   const raw = await get<LeaderboardEntry[]>(LEADERBOARD_KEY)
   return raw ?? []
+}
+
+export async function clearSave(): Promise<void> {
+  await del(SAVE_KEY)
 }
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null

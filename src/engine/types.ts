@@ -116,15 +116,17 @@ export type SkillEffect =
   | { type: 'damage_status'; power: number; statusEffect: StatusEffectType; duration: number }
   | { type: 'status'; statusEffect: StatusEffectType; duration: number }
   | { type: 'dodge_next'; chance: number }
+  | { type: 'search' }
 
 export interface Skill {
   id: string
   name: string
   description: string
   skillCategory: SkillCategory
-  requiredItemCategory: ItemCategory
+  requiredItemCategory: ItemCategory | null
   apCost: number
   effect: SkillEffect
+  immediateUse?: boolean
 }
 
 export interface ActiveEnemy extends Enemy {

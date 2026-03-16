@@ -24,7 +24,7 @@ export function rest(player: Player, rng: () => number): RestResult {
 
   const ambushRoll = rng()
   if (ambushRoll < AMBUSH_CHANCE) {
-    const ambushTemplates = ENEMY_REGISTRY.filter((e) => AMBUSH_ENEMY_IDS.includes(e.id as any))
+    const ambushTemplates = ENEMY_REGISTRY.filter((e) => AMBUSH_ENEMY_IDS.includes(e.id as typeof AMBUSH_ENEMY_IDS[number]))
     const template = ambushTemplates[Math.floor(rng() * ambushTemplates.length)]
     const enemy: ActiveEnemy = createActiveEnemy(template, true)
     return {

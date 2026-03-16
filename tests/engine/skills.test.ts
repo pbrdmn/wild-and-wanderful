@@ -36,8 +36,8 @@ function makePlayer(overrides: Partial<Player> = {}): Player {
 }
 
 describe('SKILL_REGISTRY', () => {
-  it('contains 9 skills', () => {
-    expect(SKILL_REGISTRY).toHaveLength(9)
+  it('contains 10 skills', () => {
+    expect(SKILL_REGISTRY).toHaveLength(10)
   })
 
   it('has 3 skills per item category', () => {

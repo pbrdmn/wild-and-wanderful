@@ -16,17 +16,20 @@ const SKILL_CATEGORY_LABELS: Record<string, string> = {
   utility: 'Utility',
 }
 
-function SkillCard({ skill, isUnlocked, isActive, isUsable, onToggle }: {
+function SkillCard({ skill, isUnlocked, isActive, isUsable, onToggle, onUse }: {
   skill: Skill
   isUnlocked: boolean
   isActive: boolean
   isUsable: boolean
   onToggle: () => void
+  onUse: () => void
 }) {
+  const isImmediateUse = skill.immediateUse
+  
   return (
     <button
       className={`${styles.skillCard} ${isActive ? styles.active : ''} ${!isUnlocked ? styles.locked : ''} ${isUsable ? styles.usable : ''}`}
-      onClick={onToggle}
+      onClick={isImmediateUse ? onUse : onToggle}
       disabled={!isUnlocked}
       data-testid={`skill-card-${skill.id}`}
     >
@@ -40,9 +43,10 @@ function SkillCard({ skill, isUnlocked, isActive, isUsable, onToggle }: {
           {SKILL_CATEGORY_LABELS[skill.skillCategory]}
         </span>
         <span className={styles.skillRequires}>
-          Requires: {CATEGORY_LABELS[skill.requiredItemCategory]}
+          {skill.requiredItemCategory ? `Requires: ${CATEGORY_LABELS[skill.requiredItemCategory]}` : 'No requirements'}
         </span>
       </div>
+      {isImmediateUse && <span className={styles.immediateBadge}>Immediate</span>}
       {isActive && <span className={styles.activeBadge}>Active</span>}
       {!isUnlocked && <span className={styles.lockedLabel}>Locked</span>}
     </button>
@@ -53,6 +57,7 @@ export function SkillsView() {
   const player = useGameStore((s) => s.player)
   const setView = useGameStore((s) => s.setView)
   const setActiveSkills = useGameStore((s) => s.setActiveSkills)
+  const activateSkill = useGameStore((s) => s.activateSkill)
   const message = useGameStore((s) => s.message)
   const equippedItem = useGameStore((s) => s.equippedItem)
 
@@ -70,7 +75,7 @@ export function SkillsView() {
 
   const groupedByCategory: Record<string, Skill[]> = {}
   for (const skill of SKILL_REGISTRY) {
-    const cat = skill.requiredItemCategory
+    const cat = skill.requiredItemCategory || 'none'
     if (!groupedByCategory[cat]) groupedByCategory[cat] = []
     groupedByCategory[cat].push(skill)
   }
@@ -88,13 +93,14 @@ export function SkillsView() {
         {Object.entries(groupedByCategory).map(([category, skills]) => (
           <div key={category} className={styles.categoryGroup}>
             <h2 className={styles.categoryTitle} data-testid={`category-${category}`}>
-              {CATEGORY_LABELS[category]} Skills
+              {category === 'none' ? 'General Skills' : CATEGORY_LABELS[category]} Skills
             </h2>
             <div className={styles.skillGrid}>
               {skills.map((skill) => {
                 const isUnlocked = unlockedSkillIds.includes(skill.id)
                 const isActive = activeSkillIds.includes(skill.id)
                 const isUsable = equipped?.category === skill.requiredItemCategory
+                const handleUseSkill = () => activateSkill(skill.id)
                 return (
                   <SkillCard
                     key={skill.id}
@@ -103,6 +109,7 @@ export function SkillsView() {
                     isActive={isActive}
                     isUsable={isUsable}
                     onToggle={() => handleToggle(skill.id)}
+                    onUse={handleUseSkill}
                   />
                 )
               })}

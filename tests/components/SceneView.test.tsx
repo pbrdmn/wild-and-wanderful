@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import '@testing-library/jest-dom'
 import { SceneView } from '../../src/components/SceneView'
 import { useGameStore } from '../../src/stores/gameStore'
-import { DEFAULT_MAX_AP } from '../../src/engine/types'
 import type { ActiveEnemy } from '../../src/engine/types'
 
 function initAndSkipIntro(seed: number) {
@@ -62,10 +62,6 @@ describe('SceneView', () => {
     expect(screen.queryByTestId('end-turn-button')).not.toBeInTheDocument()
   })
 
-  it('has a Search button', () => {
-    render(<SceneView />)
-    expect(screen.getByTestId('search-button')).toBeInTheDocument()
-  })
 
   it('has a Rest button', () => {
     render(<SceneView />)
@@ -134,21 +130,6 @@ describe('SceneView', () => {
     expect(restButton).not.toBeDisabled()
   })
 
-  it('Search button is always enabled during exploration', () => {
-    useGameStore.setState({
-      player: { ...useGameStore.getState().player, ap: 0 },
-    })
-    render(<SceneView />)
-    const searchButton = screen.getByTestId('search-button')
-    expect(searchButton).not.toBeDisabled()
-  })
-
-  it('does not deduct AP when Search is clicked', async () => {
-    const user = userEvent.setup()
-    render(<SceneView />)
-    await user.click(screen.getByTestId('search-button'))
-    expect(useGameStore.getState().player.ap).toBe(DEFAULT_MAX_AP)
-  })
 
   it('heals wound when Rest is clicked with wounds', async () => {
     const user = userEvent.setup()

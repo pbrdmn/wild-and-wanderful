@@ -1,8 +1,18 @@
-import type { Player, Skill, ItemCategory } from './types'
+import type { Player, Skill } from './types'
 import { ItemCategory as IC, DEFAULT_MAX_ACTIVE_SKILLS } from './types'
 import { getEquippedItem } from './inventory'
 
 export const SKILL_REGISTRY: readonly Skill[] = [
+  {
+    id: 'search',
+    name: 'Search',
+    description: 'Search the area for hidden paths.',
+    skillCategory: 'utility',
+    requiredItemCategory: null,
+    apCost: 0,
+    effect: { type: 'search' },
+    immediateUse: true,
+  },
   {
     id: 'heavy-strike',
     name: 'Heavy Strike',
@@ -92,19 +102,20 @@ export function getSkillById(skillId: string): Skill | undefined {
 
 export function getAvailableSkills(player: Player): Skill[] {
   const equipped = getEquippedItem(player)
-  if (!equipped) return []
-  return player.activeSkillIds
+  return player.unlockedSkillIds
     .map((id) => getSkillById(id))
-    .filter((s): s is Skill => s !== undefined && s.requiredItemCategory === equipped.category)
+    .filter((s): s is Skill => s !== undefined && 
+      (s.requiredItemCategory === null || (equipped !== null && s.requiredItemCategory === equipped.category)))
 }
 
 export function canUseSkill(player: Player, skillId: string): boolean {
   const skill = getSkillById(skillId)
   if (!skill) return false
+  if (!player.unlockedSkillIds.includes(skillId)) return false
   if (!player.activeSkillIds.includes(skillId)) return false
   if (player.ap < skill.apCost) return false
   const equipped = getEquippedItem(player)
-  if (!equipped || equipped.category !== skill.requiredItemCategory) return false
+  if (skill.requiredItemCategory !== null && (!equipped || equipped.category !== skill.requiredItemCategory)) return false
   return true
 }
 

@@ -28,7 +28,7 @@ describe('SkillsView', () => {
   it('shows active slot count', () => {
     render(<SkillsView />)
     const slotCount = screen.getByTestId('active-slot-count')
-    expect(slotCount.textContent).toContain('0/2')
+    expect(slotCount.textContent).toContain('1/2')
   })
 
   it('has a close button that returns to scene', async () => {
@@ -102,6 +102,6 @@ describe('SkillsView', () => {
     unmount()
 
     render(<SkillsView />)
-    expect(screen.getByTestId('active-slot-count').textContent).toContain('1/2')
+    expect(screen.getByTestId('active-slot-count').textContent).toContain('2/2')
   })
 })
