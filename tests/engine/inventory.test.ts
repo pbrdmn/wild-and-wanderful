@@ -9,7 +9,7 @@ import {
   getEquippedItem,
 } from '../../src/engine/inventory'
 import type { Player, Item } from '../../src/engine/types'
-import { ItemCategory, DEFAULT_MAX_AP, AP_COST_SWAP } from '../../src/engine/types'
+import { ItemCategory, DEFAULT_MAX_AP } from '../../src/engine/types'
 
 function makeItem(overrides: Partial<Item> = {}): Item {
   return {

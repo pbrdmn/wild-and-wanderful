@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { useGameStore } from '../../stores/gameStore'
 import { getBiomeData } from '../../engine/biomes'
-import { canMoveTo } from '../../engine/movement'
-import { AP_COST_ATTACK, AP_COST_FLEE, DIRECTION_OFFSETS, Direction } from '../../engine/types'
+import { AP_COST_ATTACK, AP_COST_FLEE } from '../../engine/types'
 import { SPECIES_LABELS } from '../../sprites/spriteConfig'
 import { playSound, isMuted, setMuted } from '../../utils/audio'
 import { BattleStage } from '../BattleStage/BattleStage'
@@ -19,9 +18,8 @@ export function SceneView() {
   const setView = useGameStore((s) => s.setView)
   const endTurn = useGameStore((s) => s.endTurn)
   const storeRest = useGameStore((s) => s.rest)
-  const storeSearch = useGameStore((s) => s.search)
   const storeAttack = useGameStore((s) => s.attack)
-  const useSkill = useGameStore((s) => s.useSkill)
+  const activateSkill = useGameStore((s) => s.activateSkill)
   const flee = useGameStore((s) => s.flee)
   const retire = useGameStore((s) => s.retire)
   const currentTileDescription = useGameStore((s) => s.currentTileDescription)
@@ -43,10 +41,6 @@ export function SceneView() {
     playSound('move')
   }
 
-  const search = () => {
-    storeSearch()
-    playSound('tap')
-  }
 
   const rest = () => {
     storeRest()
@@ -160,11 +154,12 @@ export function SceneView() {
               </button>
               {skills.map((skill) => {
                 const canUse = player.ap >= skill.apCost
+                const handleUseSkill = () => activateSkill(skill.id)
                 return (
                   <button
                     key={skill.id}
                     className={`${styles.combatButton} ${styles.skillButton} ${!canUse ? styles.disabled : ''}`}
-                    onClick={() => useSkill(skill.id)}
+                    onClick={handleUseSkill}
                     disabled={!canUse}
                     data-testid={`skill-button-${skill.id}`}
                     title={skill.description}

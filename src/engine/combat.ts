@@ -46,9 +46,6 @@ function isDazed(entity: { statusEffects: StatusEffect[] }): boolean {
   return entity.statusEffects.some((e) => e.type === 'daze')
 }
 
-function hasShield(player: Player): boolean {
-  return false // shield is tracked on player via a separate mechanism in combat
-}
 
 export function getCombatOutcome(player: Player, enemy: ActiveEnemy): CombatOutcome {
   if (enemy.hp <= 0) return 'victory'

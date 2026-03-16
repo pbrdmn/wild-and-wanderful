@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { GameState, Player, World, GamePhase, ActiveEnemy, Item, Skill, AnimalSpecies, LeaderboardEntry } from '../engine/types'
+import type { GameState, Player, World, GamePhase, Item, Skill, AnimalSpecies, LeaderboardEntry } from '../engine/types'
 import { DEFAULT_MAX_AP, Direction, DIRECTION_OFFSETS, AnimalSpecies as AnimalSpeciesEnum } from '../engine/types'
 import { generateWorld, findStartingPosition } from '../engine/world'
 import { movePlayer as engineMovePlayer, getAdjacentTiles, canMoveTo } from '../engine/movement'
@@ -54,7 +54,7 @@ interface GameActions {
   unequipItem: () => void
   swapEquipment: (itemId: string) => void
   attack: () => void
-  useSkill: (skillId: string) => void
+  activateSkill: (skillId: string) => void
   flee: () => void
   unlockSkill: (skillId: string) => void
   setActiveSkills: (skillIds: string[]) => void
@@ -80,8 +80,6 @@ interface GameStore extends GameState, GameActions, GameDerived {
   loaded: boolean
   offeredItems: Item[]
   combatLog: string[]
-  playerDodgeChance: number
-  playerHasShield: boolean
   previousPosition: { x: number; y: number } | null
   leaderboard: LeaderboardEntry[]
 }
@@ -130,8 +128,6 @@ export const useGameStore = create<GameStore>((set, get) => {
     loaded: false,
     offeredItems: [],
     combatLog: [],
-    playerDodgeChance: 0,
-    playerHasShield: false,
     previousPosition: null,
     leaderboard: [],
 
@@ -155,8 +151,6 @@ export const useGameStore = create<GameStore>((set, get) => {
         loaded: true,
         offeredItems: [...offeredItems],
         combatLog: [],
-        playerDodgeChance: 0,
-        playerHasShield: false,
         previousPosition: null,
       })
     },
@@ -179,8 +173,6 @@ export const useGameStore = create<GameStore>((set, get) => {
         message: save.gamePhase === 'intro' ? null : 'Welcome back, wanderer.',
         loaded: true,
         combatLog: [],
-        playerDodgeChance: 0,
-        playerHasShield: false,
         previousPosition: null,
       })
       return true
@@ -230,8 +222,6 @@ export const useGameStore = create<GameStore>((set, get) => {
         updates.activeEnemy = encounter
         updates.combatLog = [`A ${encounter.name} appears!`]
         updates.message = `A ${encounter.name} blocks your path!`
-        updates.playerDodgeChance = 0
-        updates.playerHasShield = false
       } else if (result.tile.discoveryId) {
         const discoveryResult = resolveDiscovery(updates.player!, result.tile.discoveryId)
         if (discoveryResult) {
@@ -386,7 +376,7 @@ export const useGameStore = create<GameStore>((set, get) => {
     },
 
     attack: () => {
-      const { player, activeEnemy, combatLog, playerDodgeChance, playerHasShield } = get()
+      const { player, activeEnemy, combatLog } = get()
       if (!activeEnemy) return
 
       const result = playerBasicAttack(player, activeEnemy)
@@ -410,13 +400,11 @@ export const useGameStore = create<GameStore>((set, get) => {
           gamePhase: 'exploring',
           combatLog: [],
           message: `${newLog[newLog.length - 1]} (+${xp} XP)${levelMsg}`,
-          playerDodgeChance: 0,
-          playerHasShield: false,
         })
         return
       }
 
-      const enemyResult = engineEnemyTurn(result.enemy, result.player, playerDodgeChance, playerHasShield)
+      const enemyResult = engineEnemyTurn(result.enemy, result.player, 0, false)
       const fullLog = [...newLog, ...enemyResult.messages]
       const postEnemyOutcome = getCombatOutcome(enemyResult.player, enemyResult.enemy)
 
@@ -428,8 +416,6 @@ export const useGameStore = create<GameStore>((set, get) => {
           gamePhase: 'exploring',
           combatLog: [],
           message: 'You retreat to the village, battered but alive.',
-          playerDodgeChance: 0,
-          playerHasShield: false,
         })
         return
       }
@@ -439,13 +425,11 @@ export const useGameStore = create<GameStore>((set, get) => {
         activeEnemy: enemyResult.enemy,
         combatLog: fullLog.slice(-5),
         message: fullLog[fullLog.length - 1],
-        playerDodgeChance: 0,
-        playerHasShield: false,
       })
     },
 
-    useSkill: (skillId: string) => {
-      const { player, activeEnemy, combatLog, playerDodgeChance, playerHasShield, gamePhase } = get()
+    activateSkill: (skillId: string) => {
+      const { player, activeEnemy, combatLog, gamePhase } = get()
       
       const skill = getSkillById(skillId)
       if (!skill) {
@@ -509,8 +493,6 @@ export const useGameStore = create<GameStore>((set, get) => {
           gamePhase: 'exploring',
           combatLog: [],
           message: `${newLog[newLog.length - 1]} (+${xp} XP)${levelMsg}`,
-          playerDodgeChance: 0,
-          playerHasShield: false,
         })
         return
       }
@@ -536,8 +518,6 @@ export const useGameStore = create<GameStore>((set, get) => {
           gamePhase: 'exploring',
           combatLog: [],
           message: 'You retreat to the village, battered but alive.',
-          playerDodgeChance: 0,
-          playerHasShield: false,
         })
         return
       }
@@ -554,8 +534,6 @@ export const useGameStore = create<GameStore>((set, get) => {
           gamePhase: 'exploring',
           combatLog: [],
           message: `${fullLog[fullLog.length - 1]} (+${xp} XP)${levelMsg}`,
-          playerDodgeChance: 0,
-          playerHasShield: false,
         })
         return
       }
@@ -565,8 +543,6 @@ export const useGameStore = create<GameStore>((set, get) => {
         activeEnemy: enemyResult.enemy,
         combatLog: fullLog.slice(-5),
         message: fullLog[fullLog.length - 1],
-        playerDodgeChance: 0,
-        playerHasShield: false,
       })
     },
 
@@ -587,16 +563,14 @@ export const useGameStore = create<GameStore>((set, get) => {
           gamePhase: 'exploring',
           combatLog: [],
           message: result.message,
-          playerDodgeChance: 0,
-          playerHasShield: false,
         })
         return
       }
 
-      const { activeEnemy, playerDodgeChance, playerHasShield } = get()
+      const { activeEnemy } = get()
       if (!activeEnemy) return
 
-      const enemyResult = engineEnemyTurn(activeEnemy, result.player, playerDodgeChance, playerHasShield)
+      const enemyResult = engineEnemyTurn(activeEnemy, result.player, 0, false)
       const fullLog = [...combatLog, result.message, ...enemyResult.messages]
       const outcome = getCombatOutcome(enemyResult.player, enemyResult.enemy)
 
@@ -608,8 +582,6 @@ export const useGameStore = create<GameStore>((set, get) => {
           gamePhase: 'exploring',
           combatLog: [],
           message: 'You retreat to the village, battered but alive.',
-          playerDodgeChance: 0,
-          playerHasShield: false,
         })
         return
       }
@@ -619,8 +591,6 @@ export const useGameStore = create<GameStore>((set, get) => {
         activeEnemy: enemyResult.enemy,
         combatLog: fullLog.slice(-5),
         message: fullLog[fullLog.length - 1],
-        playerDodgeChance: 0,
-        playerHasShield: false,
       })
     },
 

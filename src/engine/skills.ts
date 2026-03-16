@@ -1,4 +1,4 @@
-import type { Player, Skill, ItemCategory } from './types'
+import type { Player, Skill } from './types'
 import { ItemCategory as IC, DEFAULT_MAX_ACTIVE_SKILLS } from './types'
 import { getEquippedItem } from './inventory'
 

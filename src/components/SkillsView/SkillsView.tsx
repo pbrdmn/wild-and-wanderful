@@ -57,7 +57,7 @@ export function SkillsView() {
   const player = useGameStore((s) => s.player)
   const setView = useGameStore((s) => s.setView)
   const setActiveSkills = useGameStore((s) => s.setActiveSkills)
-  const useSkill = useGameStore((s) => s.useSkill)
+  const activateSkill = useGameStore((s) => s.activateSkill)
   const message = useGameStore((s) => s.message)
   const equippedItem = useGameStore((s) => s.equippedItem)
 
@@ -71,10 +71,6 @@ export function SkillsView() {
       if (activeSkillIds.length >= maxActiveSkills) return
       setActiveSkills([...activeSkillIds, skillId])
     }
-  }
-
-  function handleUse(skillId: string) {
-    useSkill(skillId)
   }
 
   const groupedByCategory: Record<string, Skill[]> = {}
@@ -104,6 +100,7 @@ export function SkillsView() {
                 const isUnlocked = unlockedSkillIds.includes(skill.id)
                 const isActive = activeSkillIds.includes(skill.id)
                 const isUsable = equipped?.category === skill.requiredItemCategory
+                const handleUseSkill = () => activateSkill(skill.id)
                 return (
                   <SkillCard
                     key={skill.id}
@@ -112,7 +109,7 @@ export function SkillsView() {
                     isActive={isActive}
                     isUsable={isUsable}
                     onToggle={() => handleToggle(skill.id)}
-                    onUse={() => handleUse(skill.id)}
+                    onUse={handleUseSkill}
                   />
                 )
               })}

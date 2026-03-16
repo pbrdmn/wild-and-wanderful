@@ -1,4 +1,5 @@
 import { Direction, DIRECTION_OFFSETS } from '../../engine/types'
+import type { World } from '../../engine/types'
 import { canMoveTo } from '../../engine/movement'
 import styles from './DirectionalGrid.module.css'
 
@@ -7,7 +8,7 @@ interface DirectionalGridProps {
   onMove: (x: number, y: number) => void
   playerX: number
   playerY: number
-  world: any // World type
+  world: World
 }
 
 export function DirectionalGrid({ glimpses, onMove, playerX, playerY, world }: DirectionalGridProps) {

@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import '@testing-library/jest-dom'
 import { SceneView } from '../../src/components/SceneView'
 import { useGameStore } from '../../src/stores/gameStore'
-import { DEFAULT_MAX_AP } from '../../src/engine/types'
 import type { ActiveEnemy } from '../../src/engine/types'
 
 function initAndSkipIntro(seed: number) {

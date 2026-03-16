@@ -135,7 +135,7 @@ describe('persistence', () => {
   describe('version stamping', () => {
     it('stamps saveVersion on every save', async () => {
       await saveGame(makeSaveData())
-      const raw = mockStore.get('game-save') as any
+      const raw = mockStore.get('game-save') as SaveData
       expect(raw.saveVersion).toBe(CURRENT_SAVE_VERSION)
     })
 
@@ -176,8 +176,8 @@ describe('persistence', () => {
 
     it('treats missing saveVersion as version 1', () => {
       const v1 = makeV1SaveData()
-      delete (v1 as any).saveVersion
-      const result = migrateSaveData(v1)
+      delete (v1 as { saveVersion?: number }).saveVersion
+      const result = migrateSaveData(v1 as SaveData)
       expect(result).not.toBeNull()
       expect(result!.saveVersion).toBe(CURRENT_SAVE_VERSION)
     })
@@ -195,11 +195,11 @@ describe('persistence', () => {
         ...makeSaveData(),
         saveVersion: 3,
       }
-      delete (v3 as any).player.species
-      delete (v3 as any).player.xp
-      ;(v3 as any).turnNumber = (v3 as any).combatRounds
-      delete (v3 as any).combatRounds
-      const result = migrateSaveData(v3)
+      delete (v3 as { player: { species?: string; xp?: number } }).player.species
+      delete (v3 as { player: { species?: string; xp?: number } }).player.xp
+      ;(v3 as { turnNumber?: number; combatRounds?: number }).turnNumber = (v3 as { turnNumber?: number; combatRounds?: number }).combatRounds
+      delete (v3 as { turnNumber?: number; combatRounds?: number }).combatRounds
+      const result = migrateSaveData(v3 as SaveData)
       expect(result).not.toBeNull()
       expect(result!.saveVersion).toBe(CURRENT_SAVE_VERSION)
       expect(result!.player.species).toBe('fox')
@@ -211,13 +211,13 @@ describe('persistence', () => {
         ...makeSaveData(),
         saveVersion: 4,
       }
-      ;(v4 as any).turnNumber = (v4 as any).combatRounds
-      delete (v4 as any).combatRounds
-      const result = migrateSaveData(v4)
+      ;(v4 as { turnNumber?: number; combatRounds?: number }).turnNumber = (v4 as { turnNumber?: number; combatRounds?: number }).combatRounds
+      delete (v4 as { turnNumber?: number; combatRounds?: number }).combatRounds
+      const result = migrateSaveData(v4 as SaveData)
       expect(result).not.toBeNull()
       expect(result!.saveVersion).toBe(CURRENT_SAVE_VERSION)
       expect(result!.combatRounds).toBe(5)
-      expect((result as any).turnNumber).toBeUndefined()
+      expect((result as { turnNumber?: number }).turnNumber).toBeUndefined()
     })
   })
 
