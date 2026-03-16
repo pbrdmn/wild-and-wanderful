@@ -6,7 +6,7 @@ export type DiscoveryType = 'item' | 'npc' | 'event'
 export type DiscoveryEffect =
   | { type: 'heal'; amount: number }
   | { type: 'xp'; amount: number }
-  | { type: 'item'; item: Omit<Item, 'id'> }
+  | { type: 'item'; item: Omit<Item, 'id' | 'quantity'> }
   | { type: 'narrative' }
 
 export interface DiscoveryTemplate {
@@ -49,6 +49,9 @@ export const DISCOVERY_REGISTRY: readonly DiscoveryTemplate[] = [
         description: 'A sturdy branch shaped into a crude but effective weapon.',
         attackPower: 2,
         flavourText: 'Simple, but it gets the job done.',
+        maxUses: 20,
+        currentUses: 20,
+        isConsumable: true,
       },
     },
   },
@@ -82,6 +85,9 @@ export const DISCOVERY_REGISTRY: readonly DiscoveryTemplate[] = [
         description: 'A compact bow left behind by a hasty traveller.',
         attackPower: 1,
         flavourText: 'Small enough to carry, accurate enough to hunt.',
+        maxUses: 30,
+        currentUses: 30,
+        isConsumable: true,
       },
     },
   },
@@ -123,6 +129,9 @@ export const DISCOVERY_REGISTRY: readonly DiscoveryTemplate[] = [
         description: 'A small stone that pulses with faint warmth.',
         attackPower: 1,
         flavourText: 'It remembers the fire that once warmed it.',
+        maxUses: 40,
+        currentUses: 40,
+        isConsumable: true,
       },
     },
   },
@@ -156,6 +165,9 @@ export const DISCOVERY_REGISTRY: readonly DiscoveryTemplate[] = [
         description: 'A battered hatchet reclaimed from the wild.',
         attackPower: 2,
         flavourText: 'Rust and all, it still bites.',
+        maxUses: 20,
+        currentUses: 20,
+        isConsumable: true,
       },
     },
   },
