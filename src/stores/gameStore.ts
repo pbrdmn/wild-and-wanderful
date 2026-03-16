@@ -99,8 +99,8 @@ function createInitialPlayer(
     species,
     level: 1,
     xp: 0,
-    wounds: 0,
-    maxWounds: 1,
+    hp: 5,
+    maxHp: 5,
     inventory: { items: [], equippedItemId: null, maxSlots: 5 },
     unlockedSkillIds: ['search'],
     activeSkillIds: ['search'],
@@ -213,7 +213,7 @@ export const useGameStore = create<GameStore>((set, get) => {
         return true
       }
 
-      const encounter = checkTileEncounter(result.tile, actionRng)
+      const encounter = checkTileEncounter(result.tile, result.player.level, actionRng)
       if (encounter) {
         newTiles[y][x] = { ...newTiles[y][x], enemyId: undefined }
         updates.world = { ...world, tiles: newTiles }
@@ -411,7 +411,7 @@ export const useGameStore = create<GameStore>((set, get) => {
       if (postEnemyOutcome === 'defeat') {
         const startPos = findStartingPosition(get().world)
         set({
-          player: { ...enemyResult.player, x: startPos.x, y: startPos.y, wounds: 0, ap: DEFAULT_MAX_AP },
+          player: { ...enemyResult.player, x: startPos.x, y: startPos.y, hp: 5, ap: DEFAULT_MAX_AP },
           activeEnemy: undefined,
           gamePhase: 'exploring',
           combatLog: [],
@@ -513,7 +513,7 @@ export const useGameStore = create<GameStore>((set, get) => {
       if (postEnemyOutcome === 'defeat') {
         const startPos = findStartingPosition(get().world)
         set({
-          player: { ...enemyResult.player, x: startPos.x, y: startPos.y, wounds: 0, ap: DEFAULT_MAX_AP },
+          player: { ...enemyResult.player, x: startPos.x, y: startPos.y, hp: 5, ap: DEFAULT_MAX_AP },
           activeEnemy: undefined,
           gamePhase: 'exploring',
           combatLog: [],
@@ -577,7 +577,7 @@ export const useGameStore = create<GameStore>((set, get) => {
       if (outcome === 'defeat') {
         const startPos = findStartingPosition(get().world)
         set({
-          player: { ...enemyResult.player, x: startPos.x, y: startPos.y, wounds: 0, ap: DEFAULT_MAX_AP },
+          player: { ...enemyResult.player, x: startPos.x, y: startPos.y, hp: 5, ap: DEFAULT_MAX_AP },
           activeEnemy: undefined,
           gamePhase: 'exploring',
           combatLog: [],

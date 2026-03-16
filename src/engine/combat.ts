@@ -49,7 +49,7 @@ function isDazed(entity: { statusEffects: StatusEffect[] }): boolean {
 
 export function getCombatOutcome(player: Player, enemy: ActiveEnemy): CombatOutcome {
   if (enemy.hp <= 0) return 'victory'
-  if (player.wounds >= player.maxWounds) return 'defeat'
+  if (player.hp <= 0) return 'defeat'
   return 'ongoing'
 }
 
@@ -183,11 +183,11 @@ export function enemyTurn(enemy: ActiveEnemy, player: Player, playerDodgeChance:
     return { player, enemy: updatedEnemy, messages }
   }
 
-  // Enemy attacks: each hit inflicts 1 wound
-  const updatedPlayer = { ...player, wounds: player.wounds + 1 }
-  messages.push(`The ${enemy.name} strikes you for 1 wound!`)
+  // Enemy attacks: each hit inflicts 1 damage
+  const updatedPlayer = { ...player, hp: Math.max(0, player.hp - 1) }
+  messages.push(`The ${enemy.name} strikes you for 1 damage!`)
 
-  if (updatedPlayer.wounds >= updatedPlayer.maxWounds) {
+  if (updatedPlayer.hp <= 0) {
     messages.push('You are overwhelmed by your wounds...')
   }
 

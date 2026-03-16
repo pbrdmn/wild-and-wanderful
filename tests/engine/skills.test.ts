@@ -31,7 +31,7 @@ function makePlayer(overrides: Partial<Player> = {}): Player {
     x: 0, y: 0,
     ap: DEFAULT_MAX_AP, maxAp: DEFAULT_MAX_AP,
     name: 'Test', species: 'fox', level: 1, xp: 0,
-    wounds: 0, maxWounds: 1,
+    hp: 5, maxHp: 5,
     inventory: { items: [], equippedItemId: null, maxSlots: 5 },
     unlockedSkillIds: [], activeSkillIds: [], maxActiveSkills: 2,
     ...overrides,

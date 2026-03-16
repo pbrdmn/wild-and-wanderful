@@ -16,21 +16,21 @@ export interface RestResult {
 export function rest(player: Player, rng: () => number): RestResult {
   let updatedPlayer: Player = { ...player }
 
-  let woundHealed = false
-  if (updatedPlayer.wounds > 0) {
-    updatedPlayer = { ...updatedPlayer, wounds: updatedPlayer.wounds - 1 }
-    woundHealed = true
+  let hpHealed = false
+  if (updatedPlayer.hp < updatedPlayer.maxHp) {
+    updatedPlayer = { ...updatedPlayer, hp: updatedPlayer.hp + 1 }
+    hpHealed = true
   }
 
   const ambushRoll = rng()
   if (ambushRoll < AMBUSH_CHANCE) {
     const ambushTemplates = ENEMY_REGISTRY.filter((e) => AMBUSH_ENEMY_IDS.includes(e.id as typeof AMBUSH_ENEMY_IDS[number]))
     const template = ambushTemplates[Math.floor(rng() * ambushTemplates.length)]
-    const enemy: ActiveEnemy = createActiveEnemy(template, true)
+    const enemy: ActiveEnemy = createActiveEnemy(template, 1, true)
     return {
       success: true,
       player: updatedPlayer,
-      woundHealed,
+      woundHealed: hpHealed,
       ambushed: true,
       enemy,
     }
@@ -39,7 +39,7 @@ export function rest(player: Player, rng: () => number): RestResult {
   return {
     success: true,
     player: updatedPlayer,
-    woundHealed,
+    woundHealed: hpHealed,
     ambushed: false,
   }
 }

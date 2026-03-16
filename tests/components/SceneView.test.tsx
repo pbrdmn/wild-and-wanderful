@@ -39,11 +39,11 @@ describe('SceneView', () => {
     expect(screen.queryByTestId('ap-display')).not.toBeInTheDocument()
   })
 
-  it('displays wound count', () => {
+  it('displays HP count', () => {
     render(<SceneView />)
-    const wounds = screen.getByTestId('wounds-display')
-    expect(wounds.textContent).toContain('Wounds:')
-    expect(wounds.textContent).toContain('0/1')
+    const hp = screen.getByTestId('hp-display')
+    expect(hp.textContent).toContain('HP:')
+    expect(hp.textContent).toContain('5/5')
   })
 
   it('shows peripheral glimpses', () => {
@@ -87,24 +87,25 @@ describe('SceneView', () => {
     expect(useGameStore.getState().view).toBe('inventory')
   })
 
-  it('shows End Turn button and AP display during combat', () => {
-    const enemy: ActiveEnemy = {
-      name: 'Test',
-      strength: 1,
-      hp: 2,
-      maxHp: 2,
-      hasInitiative: false,
-      statusEffects: [],
-    }
-    useGameStore.setState({
-      gamePhase: 'combat',
-      activeEnemy: enemy,
-      combatLog: [],
+    it('shows End Turn button and AP display during combat', () => {
+      const enemy: ActiveEnemy = {
+        name: 'Test',
+        strength: 1,
+        level: 1,
+        hp: 2,
+        maxHp: 2,
+        hasInitiative: false,
+        statusEffects: [],
+      }
+      useGameStore.setState({
+        gamePhase: 'combat',
+        activeEnemy: enemy,
+        combatLog: [],
+      })
+      render(<SceneView />)
+      expect(screen.getByTestId('end-turn-button')).toBeInTheDocument()
+      expect(screen.getByTestId('ap-display')).toBeInTheDocument()
     })
-    render(<SceneView />)
-    expect(screen.getByTestId('end-turn-button')).toBeInTheDocument()
-    expect(screen.getByTestId('ap-display')).toBeInTheDocument()
-  })
 
   it('displays a game message when present', () => {
     initAndSkipIntro(TEST_SEED)
@@ -115,15 +116,15 @@ describe('SceneView', () => {
     }
   })
 
-  it('disables Rest button when player has no wounds', () => {
+  it('disables Rest button when player is at max HP', () => {
     render(<SceneView />)
     const restButton = screen.getByTestId('rest-button')
     expect(restButton).toBeDisabled()
   })
 
-  it('enables Rest button when player has wounds', () => {
+  it('enables Rest button when player is below max HP', () => {
     useGameStore.setState({
-      player: { ...useGameStore.getState().player, wounds: 1 },
+      player: { ...useGameStore.getState().player, hp: 4 },
     })
     render(<SceneView />)
     const restButton = screen.getByTestId('rest-button')
@@ -131,14 +132,14 @@ describe('SceneView', () => {
   })
 
 
-  it('heals wound when Rest is clicked with wounds', async () => {
+  it('heals HP when Rest is clicked when below max HP', async () => {
     const user = userEvent.setup()
     useGameStore.setState({
-      player: { ...useGameStore.getState().player, wounds: 1 },
+      player: { ...useGameStore.getState().player, hp: 4 },
     })
     render(<SceneView />)
     await user.click(screen.getByTestId('rest-button'))
-    expect(useGameStore.getState().player.wounds).toBe(0)
+    expect(useGameStore.getState().player.hp).toBe(5)
   })
 
   it('shows the equipped item name', () => {
@@ -180,6 +181,7 @@ describe('SceneView', () => {
       const enemy: ActiveEnemy = {
         name: 'Shadow Wolf',
         strength: 1,
+        level: 1,
         hp: 2,
         maxHp: 2,
         hasInitiative: false,
@@ -270,6 +272,7 @@ describe('SceneView', () => {
       const enemy: ActiveEnemy = {
         name: 'Test',
         strength: 1,
+        level: 1,
         hp: 2,
         maxHp: 2,
         hasInitiative: false,

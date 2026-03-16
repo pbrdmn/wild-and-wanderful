@@ -172,12 +172,12 @@ describe('gameStore', () => {
       expect(useGameStore.getState().player.ap).toBe(apBefore)
     })
 
-    it('heals a wound when player is wounded', () => {
+    it('heals HP when player is below max HP', () => {
       useGameStore.setState({
-        player: { ...useGameStore.getState().player, wounds: 1 },
+        player: { ...useGameStore.getState().player, hp: 4 },
       })
       useGameStore.getState().rest()
-      expect(useGameStore.getState().player.wounds).toBe(0)
+      expect(useGameStore.getState().player.hp).toBe(5)
       expect(useGameStore.getState().message).toContain('heal')
     })
 
@@ -331,6 +331,7 @@ describe('gameStore', () => {
       const enemy: ActiveEnemy = {
         name: 'Test Enemy',
         strength: 1,
+        level: 1,
         hp: 3,
         maxHp: 3,
         hasInitiative: false,
@@ -358,6 +359,7 @@ describe('gameStore', () => {
       const enemy: ActiveEnemy = {
         name: 'Weak Enemy',
         strength: 1,
+        level: 1,
         hp: 1,
         maxHp: 1,
         hasInitiative: false,

@@ -72,18 +72,19 @@ describe('getEnemyById', () => {
 describe('createActiveEnemy', () => {
   it('creates an active enemy from a template', () => {
     const template = ENEMY_REGISTRY[0]
-    const active = createActiveEnemy(template, false)
+    const active = createActiveEnemy(template, 1, false)
     expect(active.name).toBe(template.name)
-    expect(active.strength).toBe(template.strength)
-    expect(active.hp).toBe(template.hp)
-    expect(active.maxHp).toBe(template.hp)
+    expect(active.strength).toBe(1) // level 1 enemy has strength 1
+    expect(active.hp).toBe(4) // level 1 enemy has hp = 1 + 3 = 4
+    expect(active.maxHp).toBe(4)
     expect(active.hasInitiative).toBe(false)
     expect(active.statusEffects).toEqual([])
+    expect(active.level).toBe(1)
   })
 
   it('sets hasInitiative when specified', () => {
     const template = ENEMY_REGISTRY[0]
-    const active = createActiveEnemy(template, true)
+    const active = createActiveEnemy(template, 1, true)
     expect(active.hasInitiative).toBe(true)
   })
 })
@@ -138,20 +139,26 @@ describe('checkTileEncounter', () => {
   it('returns an active enemy when tile has an enemyId', () => {
     const tile = makeTile(0, 0, { enemyId: 'shadow-wolf' })
     const rng = createRng(42)
-    const enemy = checkTileEncounter(tile, rng)
+    const enemy = checkTileEncounter(tile, 1, rng)
     expect(enemy).not.toBeNull()
     expect(enemy!.name).toBe('Shadow Wolf')
+    expect(enemy!.strength).toBeGreaterThan(0)
+    expect(enemy!.hp).toBeGreaterThan(3) // enemy hp = level + 3, level >= 1
+    expect(enemy!.maxHp).toBe(enemy!.hp)
+    expect(enemy!.level).toBeGreaterThan(0)
+    // hasInitiative is random, so we just check it's a boolean
+    expect(typeof enemy!.hasInitiative).toBe('boolean')
   })
 
   it('returns null when tile has no enemyId', () => {
     const tile = makeTile(0, 0)
     const rng = createRng(42)
-    expect(checkTileEncounter(tile, rng)).toBeNull()
+    expect(checkTileEncounter(tile, 1, rng)).toBeNull()
   })
 
   it('returns null for unknown enemyId', () => {
     const tile = makeTile(0, 0, { enemyId: 'nonexistent' })
     const rng = createRng(42)
-    expect(checkTileEncounter(tile, rng)).toBeNull()
+    expect(checkTileEncounter(tile, 1, rng)).toBeNull()
   })
 })

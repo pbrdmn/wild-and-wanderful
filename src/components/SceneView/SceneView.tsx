@@ -60,7 +60,7 @@ export function SceneView() {
   const skills = availableSkills()
 
   const inCombat = gamePhase === 'combat' && activeEnemy != null
-  const canRest = player.wounds > 0
+  const canRest = player.hp < player.maxHp
   const canAttack = inCombat && player.ap >= AP_COST_ATTACK && equipped != null
   const canFlee = inCombat && player.ap >= AP_COST_FLEE
 
@@ -75,8 +75,8 @@ export function SceneView() {
                 AP: {player.ap}/{player.maxAp}
               </span>
             )}
-            <span className={styles.wounds} data-testid="wounds-display">
-              Wounds: {player.wounds}/{player.maxWounds}
+            <span className={styles.wounds} data-testid="hp-display">
+              HP: {player.hp}/{player.maxHp}
             </span>
             <span className={styles.level} data-testid="level-display">Lv {player.level}</span>
             <span className={styles.xp} data-testid="xp-display">XP: {player.xp}</span>

@@ -28,7 +28,7 @@ function makePlayer(overrides: Partial<Player> = {}): Player {
     x: 0, y: 0,
     ap: DEFAULT_MAX_AP, maxAp: DEFAULT_MAX_AP,
     name: 'Test', species: 'fox', level: 1, xp: 0,
-    wounds: 0, maxWounds: 3,
+    hp: 3, maxHp: 3,
     inventory: { items: [sword], equippedItemId: 'sword-1', maxSlots: 5 },
     unlockedSkillIds: [], activeSkillIds: [], maxActiveSkills: 2,
     ...overrides,
@@ -57,8 +57,8 @@ describe('getCombatOutcome', () => {
     expect(getCombatOutcome(makePlayer(), makeEnemy({ hp: 0 }))).toBe('victory')
   })
 
-  it('returns defeat when player wounds reach max', () => {
-    expect(getCombatOutcome(makePlayer({ wounds: 3, maxWounds: 3 }), makeEnemy())).toBe('defeat')
+  it('returns defeat when player HP reaches 0', () => {
+    expect(getCombatOutcome(makePlayer({ hp: 0 }), makeEnemy())).toBe('defeat')
   })
 
   it('returns ongoing otherwise', () => {
@@ -185,10 +185,10 @@ describe('playerSkillAttack', () => {
 })
 
 describe('enemyTurn', () => {
-  it('inflicts 1 wound on the player', () => {
-    const result = enemyTurn(makeEnemy({ strength: 1 }), makePlayer())
-    expect(result.player.wounds).toBe(1)
-    expect(result.messages.some((m) => m.includes('wound'))).toBe(true)
+  it('inflicts 1 damage on the player', () => {
+    const result = enemyTurn(makeEnemy({ strength: 1 }), makePlayer({ hp: 3 }))
+    expect(result.player.hp).toBe(2)
+    expect(result.messages.some((m) => m.includes('damage'))).toBe(true)
   })
 
   it('skips attack when enemy is dazed', () => {
@@ -196,7 +196,7 @@ describe('enemyTurn', () => {
       statusEffects: [{ type: 'daze', remainingTurns: 1 }],
     })
     const result = enemyTurn(enemy, makePlayer())
-    expect(result.player.wounds).toBe(0)
+    expect(result.player.hp).toBe(3)
     expect(result.messages.some((m) => m.includes('dazed'))).toBe(true)
   })
 
@@ -228,14 +228,14 @@ describe('enemyTurn', () => {
 
   it('absorbs damage when player has shield', () => {
     const result = enemyTurn(makeEnemy(), makePlayer(), 0, true)
-    expect(result.player.wounds).toBe(0)
+    expect(result.player.hp).toBe(3)
     expect(result.messages.some((m) => m.includes('shield'))).toBe(true)
   })
 
-  it('reports overwhelmed when wounds reach max', () => {
-    const player = makePlayer({ wounds: 2, maxWounds: 3 })
+  it('reports overwhelmed when HP reaches 0', () => {
+    const player = makePlayer({ hp: 1 })
     const result = enemyTurn(makeEnemy(), player)
-    expect(result.player.wounds).toBe(3)
+    expect(result.player.hp).toBe(0)
     expect(result.messages.some((m) => m.includes('overwhelmed'))).toBe(true)
   })
 
@@ -243,7 +243,7 @@ describe('enemyTurn', () => {
     const player = makePlayer()
     const enemy = makeEnemy()
     enemyTurn(enemy, player)
-    expect(player.wounds).toBe(0)
+    expect(player.hp).toBe(3)
     expect(enemy.statusEffects).toEqual([])
   })
 })

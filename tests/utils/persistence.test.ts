@@ -37,7 +37,7 @@ function makeSaveData(): SaveData {
       x: 1, y: 1,
       ap: DEFAULT_MAX_AP, maxAp: DEFAULT_MAX_AP,
       name: 'Tester', species: 'fox', level: 1, xp: 0,
-      wounds: 0, maxWounds: 1,
+      hp: 5, maxHp: 5,
       inventory: { items: [], equippedItemId: null, maxSlots: 5 },
       unlockedSkillIds: [], activeSkillIds: [], maxActiveSkills: 2,
     },
@@ -67,7 +67,7 @@ function makeV1SaveData(): Record<string, unknown> {
       x: 1, y: 1,
       ap: DEFAULT_MAX_AP, maxAp: DEFAULT_MAX_AP,
       name: 'OldSave', level: 1,
-      wounds: 0, maxWounds: 1,
+      hp: 5, maxHp: 5,
     },
     turnNumber: 3,
     gamePhase: 'exploring',
@@ -124,13 +124,13 @@ describe('persistence', () => {
     expect(loaded).toBeNull()
   })
 
-  it('preserves activeEnemy through save/load', async () => {
-    const data = makeSaveData()
-    data.activeEnemy = { name: 'Shadow Wolf', strength: 1, hp: 2, maxHp: 2, hasInitiative: true, statusEffects: [] }
-    await saveGame(data)
-    const loaded = await loadGame()
-    expect(loaded!.activeEnemy).toEqual({ name: 'Shadow Wolf', strength: 1, hp: 2, maxHp: 2, hasInitiative: true, statusEffects: [] })
-  })
+    it('preserves activeEnemy through save/load', async () => {
+      const data = makeSaveData()
+      data.activeEnemy = { name: 'Shadow Wolf', strength: 1, level: 1, hp: 2, maxHp: 2, hasInitiative: true, statusEffects: [] }
+      await saveGame(data)
+      const loaded = await loadGame()
+      expect(loaded!.activeEnemy).toEqual({ name: 'Shadow Wolf', strength: 1, level: 1, hp: 2, maxHp: 2, hasInitiative: true, statusEffects: [] })
+    })
 
   describe('version stamping', () => {
     it('stamps saveVersion on every save', async () => {
