@@ -2,7 +2,7 @@ import type { Player, ActiveEnemy } from './types'
 import { XP_LEVEL_THRESHOLDS } from './types'
 
 export function calculateXpReward(enemy: ActiveEnemy): number {
-  return enemy.maxHp
+  return enemy.level
 }
 
 export function getLevel(xp: number): number {
@@ -12,15 +12,15 @@ export function getLevel(xp: number): number {
   return 1
 }
 
-const LEVEL_REWARDS: { maxWounds: number; maxActiveSkills: number }[] = [
-  { maxWounds: 1, maxActiveSkills: 2 },
-  { maxWounds: 2, maxActiveSkills: 2 },
-  { maxWounds: 3, maxActiveSkills: 3 },
-  { maxWounds: 4, maxActiveSkills: 3 },
-  { maxWounds: 5, maxActiveSkills: 4 },
+const LEVEL_REWARDS: { maxHp: number; maxActiveSkills: number }[] = [
+  { maxHp: 5, maxActiveSkills: 2 },
+  { maxHp: 6, maxActiveSkills: 2 },
+  { maxHp: 7, maxActiveSkills: 3 },
+  { maxHp: 8, maxActiveSkills: 3 },
+  { maxHp: 9, maxActiveSkills: 4 },
 ]
 
-export function getLevelRewards(level: number): { maxWounds: number; maxActiveSkills: number } {
+export function getLevelRewards(level: number): { maxHp: number; maxActiveSkills: number } {
   const idx = Math.min(level, LEVEL_REWARDS.length) - 1
   return LEVEL_REWARDS[Math.max(0, idx)]
 }
@@ -30,7 +30,7 @@ export function applyLevelUp(player: Player, newLevel: number): Player {
   return {
     ...player,
     level: newLevel,
-    maxWounds: rewards.maxWounds,
+    maxHp: rewards.maxHp,
     maxActiveSkills: rewards.maxActiveSkills,
   }
 }

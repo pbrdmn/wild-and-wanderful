@@ -93,8 +93,8 @@ export interface Player {
   species: AnimalSpecies
   level: number
   xp: number
-  wounds: number
-  maxWounds: number
+  hp: number
+  maxHp: number
   inventory: Inventory
   unlockedSkillIds: string[]
   activeSkillIds: string[]
@@ -104,6 +104,7 @@ export interface Player {
 export interface Enemy {
   name: string
   strength: number
+  level: number
 }
 
 export type StatusEffectType = 'daze' | 'poison' | 'shield'

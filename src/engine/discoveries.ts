@@ -240,9 +240,9 @@ export function resolveDiscovery(
 
   switch (template.effect.type) {
     case 'heal': {
-      if (updatedPlayer.wounds > 0) {
-        const healed = Math.min(template.effect.amount, updatedPlayer.wounds)
-        updatedPlayer = { ...updatedPlayer, wounds: updatedPlayer.wounds - healed }
+      if (updatedPlayer.hp < updatedPlayer.maxHp) {
+        const healed = Math.min(template.effect.amount, updatedPlayer.maxHp - updatedPlayer.hp)
+        updatedPlayer = { ...updatedPlayer, hp: updatedPlayer.hp + healed }
         message += ` (Healed ${healed} wound${healed > 1 ? 's' : ''})`
       }
       break

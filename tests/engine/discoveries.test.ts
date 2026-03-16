@@ -17,7 +17,7 @@ function makePlayer(overrides: Partial<Player> = {}): Player {
     x: 0, y: 0,
     ap: DEFAULT_MAX_AP, maxAp: DEFAULT_MAX_AP,
     name: 'Test', species: 'fox', level: 1, xp: 0,
-    wounds: 0, maxWounds: 3,
+    hp: 0, maxHp: 3,
     inventory: { items: [], equippedItemId: null, maxSlots: 5 },
     unlockedSkillIds: [], activeSkillIds: [], maxActiveSkills: 2,
     ...overrides,
@@ -98,18 +98,18 @@ describe('discoveries', () => {
     })
 
     it('heals wounds for heal effect', () => {
-      const player = makePlayer({ wounds: 2 })
+      const player = makePlayer({ hp: 2 })
       const result = resolveDiscovery(player, 'mushroom-patch')
       expect(result).not.toBeNull()
-      expect(result!.player.wounds).toBe(1)
+      expect(result!.player.hp).toBe(3)
       expect(result!.message).toContain('Healed')
     })
 
     it('does not heal below 0 wounds', () => {
-      const player = makePlayer({ wounds: 0 })
+      const player = makePlayer({ hp: 3 })
       const result = resolveDiscovery(player, 'mushroom-patch')
       expect(result).not.toBeNull()
-      expect(result!.player.wounds).toBe(0)
+      expect(result!.player.hp).toBe(3)
     })
 
     it('grants XP for xp effect', () => {
@@ -133,10 +133,13 @@ describe('discoveries', () => {
       const fullItems = Array.from({ length: 5 }, (_, i) => ({
         id: `item-${i}`,
         name: `Item ${i}`,
-        category: ItemCategory.Melee as const,
+        category: ItemCategory.Melee,
         description: '',
         attackPower: 1,
         flavourText: '',
+        maxUses: 10,
+        currentUses: 10,
+        isConsumable: true,
       }))
       const player = makePlayer({
         inventory: { items: fullItems, equippedItemId: null, maxSlots: 5 },

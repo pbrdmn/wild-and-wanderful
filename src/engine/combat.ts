@@ -1,5 +1,5 @@
 import type { Player, ActiveEnemy, Skill, StatusEffect } from './types'
-import { AP_COST_ATTACK, AP_COST_FLEE, BASE_FLEE_CHANCE } from './types'
+import { AP_COST_ATTACK, AP_COST_FLEE } from './types'
 import { getEquippedItem } from './inventory'
 
 export type CombatOutcome = 'ongoing' | 'victory' | 'defeat'
@@ -49,7 +49,7 @@ function isDazed(entity: { statusEffects: StatusEffect[] }): boolean {
 
 export function getCombatOutcome(player: Player, enemy: ActiveEnemy): CombatOutcome {
   if (enemy.hp <= 0) return 'victory'
-  if (player.wounds >= player.maxWounds) return 'defeat'
+  if (player.hp <= 0) return 'defeat'
   return 'ongoing'
 }
 
@@ -58,16 +58,23 @@ export function playerBasicAttack(player: Player, enemy: ActiveEnemy): CombatAct
     return { success: false, reason: 'Not enough AP to attack.', player, enemy, messages: [] }
   }
 
-  const equipped = getEquippedItem(player)
-  if (!equipped) {
-    return { success: false, reason: 'No weapon equipped.', player, enemy, messages: [] }
-  }
-
   const updatedPlayer = { ...player, ap: player.ap - AP_COST_ATTACK }
-  const damage = equipped.attackPower
+  const equipped = getEquippedItem(player)
+  
+  let damage: number
+  let attackMessage: string
+  
+  if (equipped) {
+    damage = equipped.attackPower
+    attackMessage = `You strike the ${enemy.name} with your ${equipped.name} for ${damage} damage.`
+  } else {
+    damage = 1
+    attackMessage = `You punch the ${enemy.name} for ${damage} damage.`
+  }
+  
   const newHp = Math.max(0, enemy.hp - damage)
   const updatedEnemy = { ...enemy, hp: newHp }
-  const messages = [`You strike the ${enemy.name} with your ${equipped.name} for ${damage} damage.`]
+  const messages = [attackMessage]
 
   if (newHp <= 0) {
     messages.push(`The ${enemy.name} is defeated!`)
@@ -183,11 +190,11 @@ export function enemyTurn(enemy: ActiveEnemy, player: Player, playerDodgeChance:
     return { player, enemy: updatedEnemy, messages }
   }
 
-  // Enemy attacks: each hit inflicts 1 wound
-  const updatedPlayer = { ...player, wounds: player.wounds + 1 }
-  messages.push(`The ${enemy.name} strikes you for 1 wound!`)
+  // Enemy attacks: each hit inflicts 1 damage
+  const updatedPlayer = { ...player, hp: Math.max(0, player.hp - 1) }
+  messages.push(`The ${enemy.name} strikes you for 1 damage!`)
 
-  if (updatedPlayer.wounds >= updatedPlayer.maxWounds) {
+  if (updatedPlayer.hp <= 0) {
     messages.push('You are overwhelmed by your wounds...')
   }
 
@@ -203,19 +210,38 @@ export function attemptFlee(player: Player, rng: () => number): FleeResult {
   const updatedPlayer = { ...player, ap: player.ap - AP_COST_FLEE }
   const roll = rng()
 
-  if (roll < BASE_FLEE_CHANCE) {
+  // 30% chance to fail fleeing (stay in combat) - when roll >= 0.7
+  if (roll >= 0.7) {
     return {
       success: true,
-      fled: true,
+      fled: false,
       player: updatedPlayer,
-      message: 'You manage to escape!',
+      message: 'You try to flee but the enemy blocks your path!',
     }
   }
 
+  // 70% chance to successfully flee, but 50% of those result in taking damage
+  if (roll < 0.35) {
+    // Flee successfully but take damage (50% of successful flee attempts)
+    const damagedPlayer = { ...updatedPlayer, hp: Math.max(0, updatedPlayer.hp - 1) }
+    const messages = [
+      'You manage to escape!',
+      'The enemy lands a parting blow as you flee!'
+    ]
+    
+    return {
+      success: true,
+      fled: true,
+      player: damagedPlayer,
+      message: messages.join(' '),
+    }
+  }
+
+  // Flee successfully without damage
   return {
     success: true,
-    fled: false,
+    fled: true,
     player: updatedPlayer,
-    message: 'You try to flee but the enemy blocks your path!',
+    message: 'You manage to escape!',
   }
 }

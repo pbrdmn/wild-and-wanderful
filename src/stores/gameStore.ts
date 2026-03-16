@@ -13,6 +13,7 @@ import {
   unequipItem as engineUnequipItem,
   swapEquipment as engineSwapEquipment,
   getEquippedItem,
+  activateEquippedItem,
 } from '../engine/inventory'
 import {
   getAvailableSkills as engineGetAvailableSkills,
@@ -56,6 +57,7 @@ interface GameActions {
   attack: () => void
   activateSkill: (skillId: string) => void
   flee: () => void
+  openInventory: () => void
   unlockSkill: (skillId: string) => void
   setActiveSkills: (skillIds: string[]) => void
   retire: () => void
@@ -99,8 +101,8 @@ function createInitialPlayer(
     species,
     level: 1,
     xp: 0,
-    wounds: 0,
-    maxWounds: 1,
+    hp: 5,
+    maxHp: 5,
     inventory: { items: [], equippedItemId: null, maxSlots: 5 },
     unlockedSkillIds: ['search'],
     activeSkillIds: ['search'],
@@ -213,7 +215,7 @@ export const useGameStore = create<GameStore>((set, get) => {
         return true
       }
 
-      const encounter = checkTileEncounter(result.tile, actionRng)
+      const encounter = checkTileEncounter(result.tile, result.player.level, actionRng)
       if (encounter) {
         newTiles[y][x] = { ...newTiles[y][x], enemyId: undefined }
         updates.world = { ...world, tiles: newTiles }
@@ -234,16 +236,6 @@ export const useGameStore = create<GameStore>((set, get) => {
 
       set(updates)
       return true
-    },
-
-    endTurn: () => {
-      const { player, combatRounds, gamePhase } = get()
-      if (gamePhase !== 'combat') return
-      set({
-        player: { ...player, ap: player.maxAp },
-        combatRounds: combatRounds + 1,
-        message: `Round ${combatRounds + 1} begins.`,
-      })
     },
 
     rest: () => {
@@ -385,12 +377,24 @@ export const useGameStore = create<GameStore>((set, get) => {
         return
       }
 
+      // Use equipped item if attack was successful and hit the enemy
+      const equipped = getEquippedItem(result.player)
+      let finalPlayer = result.player
+      
+      if (equipped && equipped.isConsumable && equipped.currentUses > 0) {
+        // Use the item (reduce durability)
+        const useResult = activateEquippedItem(result.player)
+        if (useResult.success) {
+          finalPlayer = useResult.player
+        }
+      }
+
       const newLog = [...combatLog, ...result.messages]
-      const outcome = getCombatOutcome(result.player, result.enemy)
+      const outcome = getCombatOutcome(finalPlayer, result.enemy)
 
       if (outcome === 'victory') {
         const xp = calculateXpReward(activeEnemy)
-        let victoryPlayer = { ...result.player, xp: result.player.xp + xp }
+        let victoryPlayer = { ...finalPlayer, xp: finalPlayer.xp + xp }
         const levelResult = checkLevelUp(victoryPlayer)
         victoryPlayer = levelResult.player
         const levelMsg = levelResult.leveled ? ` You are now level ${levelResult.newLevel}!` : ''
@@ -404,14 +408,14 @@ export const useGameStore = create<GameStore>((set, get) => {
         return
       }
 
-      const enemyResult = engineEnemyTurn(result.enemy, result.player, 0, false)
+      const enemyResult = engineEnemyTurn(result.enemy, finalPlayer, 0, false)
       const fullLog = [...newLog, ...enemyResult.messages]
       const postEnemyOutcome = getCombatOutcome(enemyResult.player, enemyResult.enemy)
 
       if (postEnemyOutcome === 'defeat') {
         const startPos = findStartingPosition(get().world)
         set({
-          player: { ...enemyResult.player, x: startPos.x, y: startPos.y, wounds: 0, ap: DEFAULT_MAX_AP },
+          player: { ...enemyResult.player, x: startPos.x, y: startPos.y, hp: 5, ap: DEFAULT_MAX_AP },
           activeEnemy: undefined,
           gamePhase: 'exploring',
           combatLog: [],
@@ -513,7 +517,7 @@ export const useGameStore = create<GameStore>((set, get) => {
       if (postEnemyOutcome === 'defeat') {
         const startPos = findStartingPosition(get().world)
         set({
-          player: { ...enemyResult.player, x: startPos.x, y: startPos.y, wounds: 0, ap: DEFAULT_MAX_AP },
+          player: { ...enemyResult.player, x: startPos.x, y: startPos.y, hp: 5, ap: DEFAULT_MAX_AP },
           activeEnemy: undefined,
           gamePhase: 'exploring',
           combatLog: [],
@@ -577,7 +581,7 @@ export const useGameStore = create<GameStore>((set, get) => {
       if (outcome === 'defeat') {
         const startPos = findStartingPosition(get().world)
         set({
-          player: { ...enemyResult.player, x: startPos.x, y: startPos.y, wounds: 0, ap: DEFAULT_MAX_AP },
+          player: { ...enemyResult.player, x: startPos.x, y: startPos.y, hp: 5, ap: DEFAULT_MAX_AP },
           activeEnemy: undefined,
           gamePhase: 'exploring',
           combatLog: [],
@@ -591,6 +595,37 @@ export const useGameStore = create<GameStore>((set, get) => {
         activeEnemy: enemyResult.enemy,
         combatLog: fullLog.slice(-5),
         message: fullLog[fullLog.length - 1],
+      })
+    },
+
+    openInventory: () => {
+      const { player, gamePhase } = get()
+      if (gamePhase !== 'combat') return
+
+      // Consume 1 AP to open inventory during combat
+      if (player.ap < 1) {
+        set({ message: 'Not enough AP to open inventory.' })
+        return
+      }
+
+      const updatedPlayer = { ...player, ap: player.ap - 1 }
+      set({
+        player: updatedPlayer,
+        view: 'inventory',
+        message: 'You open your pack to change equipment.',
+      })
+    },
+
+    endTurn: () => {
+      const { player, gamePhase, combatRounds } = get()
+      if (gamePhase !== 'combat') return
+
+      // Reset AP to max and increment combat rounds
+      const updatedPlayer = { ...player, ap: player.maxAp }
+      set({
+        player: updatedPlayer,
+        combatRounds: combatRounds + 1,
+        message: 'You do nothing this turn.',
       })
     },
 

@@ -24,12 +24,15 @@ export function getEnemiesForBiome(terrain: TerrainType): EnemyTemplate[] {
   return ENEMY_REGISTRY.filter((e) => e.biomes.includes(terrain))
 }
 
-export function createActiveEnemy(template: EnemyTemplate, hasInitiative: boolean): ActiveEnemy {
+export function createActiveEnemy(template: EnemyTemplate, level: number, hasInitiative: boolean): ActiveEnemy {
+  const hp = level + 3
+  const strength = Math.max(1, Math.floor(level * 0.8))
   return {
     name: template.name,
-    strength: template.strength,
-    hp: template.hp,
-    maxHp: template.hp,
+    strength,
+    level,
+    hp,
+    maxHp: hp,
     hasInitiative,
     statusEffects: [],
   }
@@ -63,9 +66,10 @@ export function getEnemyById(enemyId: string): EnemyTemplate | undefined {
   return ENEMY_REGISTRY.find((e) => e.id === enemyId)
 }
 
-export function checkTileEncounter(tile: Tile, rng: () => number): ActiveEnemy | null {
+export function checkTileEncounter(tile: Tile, playerLevel: number, rng: () => number): ActiveEnemy | null {
   if (!tile.enemyId) return null
   const template = getEnemyById(tile.enemyId)
   if (!template) return null
-  return createActiveEnemy(template, rng() < 0.3)
+  const enemyLevel = Math.floor(rng() * (playerLevel + 1)) + 1
+  return createActiveEnemy(template, enemyLevel, rng() < 0.3)
 }

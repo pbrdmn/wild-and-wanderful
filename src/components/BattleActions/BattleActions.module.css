@@ -1,0 +1,130 @@
+.battleActions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid #4a5568;
+  border-radius: 8px;
+  color: white;
+  min-width: 300px;
+}
+
+.statusBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.playerStatus, .enemyStatus {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: bold;
+}
+
+.statusLabel {
+  font-size: 0.875rem;
+  color: #cbd5e0;
+}
+
+.statusValue {
+  font-size: 1rem;
+  color: #ffffff;
+}
+
+.actionButtons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.actionBtn {
+  padding: 0.75rem;
+  border: 2px solid #4a5568;
+  border-radius: 4px;
+  background: #2d3748;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.actionBtn:hover.btnEnabled {
+  background: #4a5568;
+  border-color: #718096;
+}
+
+.actionBtn:active.btnEnabled {
+  transform: translateY(1px);
+}
+
+.actionBtn.btnDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #1a202c;
+}
+
+.apCost {
+  font-size: 0.75rem;
+  color: #a0aec0;
+  font-weight: normal;
+}
+
+.combatLog {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #4a5568;
+  border-radius: 4px;
+  padding: 0.5rem;
+}
+
+.logHeader {
+  font-size: 0.875rem;
+  color: #cbd5e0;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid #4a5568;
+  padding-bottom: 0.25rem;
+}
+
+.logContent {
+  max-height: 120px;
+  overflow-y: auto;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.logEntry {
+  margin-bottom: 0.25rem;
+  color: #e2e8f0;
+}
+
+.message {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid #4a5568;
+  border-radius: 4px;
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  color: #e2e8f0;
+  text-align: center;
+}
+
+/* Scrollbar styling for combat log */
+.logContent::-webkit-scrollbar {
+  width: 6px;
+}
+
+.logContent::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.logContent::-webkit-scrollbar-thumb {
+  background: #4a5568;
+  border-radius: 3px;
+}
