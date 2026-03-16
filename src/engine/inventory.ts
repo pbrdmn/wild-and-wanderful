@@ -146,7 +146,7 @@ export function getEquippedItem(player: Player): Item | null {
   return inventory.items.find((i) => i.id === inventory.equippedItemId) ?? null
 }
 
-export function useEquippedItem(player: Player): InventoryResult {
+export function activateEquippedItem(player: Player): InventoryResult {
   const { inventory } = player
   const equippedItem = getEquippedItem(player)
   

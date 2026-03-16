@@ -15,7 +15,6 @@ export function SceneView() {
   const activeEnemy = useGameStore((s) => s.activeEnemy)
   const message = useGameStore((s) => s.message)
   const setView = useGameStore((s) => s.setView)
-  const endTurn = useGameStore((s) => s.endTurn)
   const storeRest = useGameStore((s) => s.rest)
   const retire = useGameStore((s) => s.retire)
   const currentTileDescription = useGameStore((s) => s.currentTileDescription)

@@ -53,7 +53,7 @@ export function getCombatOutcome(player: Player, enemy: ActiveEnemy): CombatOutc
   return 'ongoing'
 }
 
-export function playerBasicAttack(player: Player, enemy: ActiveEnemy, rng: () => number = Math.random): CombatActionResult {
+export function playerBasicAttack(player: Player, enemy: ActiveEnemy): CombatActionResult {
   if (player.ap < AP_COST_ATTACK) {
     return { success: false, reason: 'Not enough AP to attack.', player, enemy, messages: [] }
   }
@@ -62,16 +62,13 @@ export function playerBasicAttack(player: Player, enemy: ActiveEnemy, rng: () =>
   const equipped = getEquippedItem(player)
   
   let damage: number
-  let weaponName: string
   let attackMessage: string
   
   if (equipped) {
     damage = equipped.attackPower
-    weaponName = equipped.name
     attackMessage = `You strike the ${enemy.name} with your ${equipped.name} for ${damage} damage.`
   } else {
     damage = 1
-    weaponName = 'fists'
     attackMessage = `You punch the ${enemy.name} for ${damage} damage.`
   }
   

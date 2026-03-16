@@ -13,7 +13,7 @@ import {
   unequipItem as engineUnequipItem,
   swapEquipment as engineSwapEquipment,
   getEquippedItem,
-  useEquippedItem,
+  activateEquippedItem,
 } from '../engine/inventory'
 import {
   getAvailableSkills as engineGetAvailableSkills,
@@ -371,7 +371,7 @@ export const useGameStore = create<GameStore>((set, get) => {
       const { player, activeEnemy, combatLog } = get()
       if (!activeEnemy) return
 
-      const result = playerBasicAttack(player, activeEnemy, actionRng)
+      const result = playerBasicAttack(player, activeEnemy)
       if (!result.success) {
         set({ message: result.reason ?? 'Cannot attack.' })
         return
@@ -383,7 +383,7 @@ export const useGameStore = create<GameStore>((set, get) => {
       
       if (equipped && equipped.isConsumable && equipped.currentUses > 0) {
         // Use the item (reduce durability)
-        const useResult = useEquippedItem(result.player)
+        const useResult = activateEquippedItem(result.player)
         if (useResult.success) {
           finalPlayer = useResult.player
         }
