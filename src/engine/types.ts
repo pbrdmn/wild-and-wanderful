@@ -72,6 +72,10 @@ export interface Item {
   description: string
   attackPower: number
   flavourText: string
+  quantity?: number
+  maxUses: number
+  currentUses: number
+  isConsumable: boolean
 }
 
 export interface Inventory {

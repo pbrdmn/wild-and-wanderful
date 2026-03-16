@@ -9,6 +9,9 @@ const MELEE_HEIRLOOMS: readonly Omit<Item, 'id'>[] = [
     description: 'A sturdy blade carved from an ancient bramblewood tree.',
     attackPower: 3,
     flavourText: 'Its edge hums faintly when danger is near.',
+    maxUses: 20,
+    currentUses: 20,
+    isConsumable: true,
   },
   {
     name: 'Acorn Cleaver',
@@ -16,6 +19,9 @@ const MELEE_HEIRLOOMS: readonly Omit<Item, 'id'>[] = [
     description: 'A hefty cleaver forged by the badger smiths of Millhollow.',
     attackPower: 3,
     flavourText: 'Smells faintly of roasted chestnuts and iron.',
+    maxUses: 20,
+    currentUses: 20,
+    isConsumable: true,
   },
   {
     name: 'Thistlethorn Sabre',
@@ -23,6 +29,9 @@ const MELEE_HEIRLOOMS: readonly Omit<Item, 'id'>[] = [
     description: 'A curved sabre with a guard shaped like intertwined thistles.',
     attackPower: 3,
     flavourText: 'Light enough to carry, sharp enough to matter.',
+    maxUses: 20,
+    currentUses: 20,
+    isConsumable: true,
   },
 ]
 
@@ -33,6 +42,9 @@ const RANGED_HEIRLOOMS: readonly Omit<Item, 'id'>[] = [
     description: 'A short bow of polished thornwood, strung with spider-silk.',
     attackPower: 2,
     flavourText: 'Arrows fly true even on the windiest days.',
+    maxUses: 30,
+    currentUses: 30,
+    isConsumable: true,
   },
   {
     name: 'Pinecone Sling',
@@ -40,6 +52,9 @@ const RANGED_HEIRLOOMS: readonly Omit<Item, 'id'>[] = [
     description: 'A well-worn sling that launches pinecones with surprising force.',
     attackPower: 2,
     flavourText: 'Every forest clearing is an armoury.',
+    maxUses: 30,
+    currentUses: 30,
+    isConsumable: true,
   },
   {
     name: 'Willowbark Longbow',
@@ -47,6 +62,9 @@ const RANGED_HEIRLOOMS: readonly Omit<Item, 'id'>[] = [
     description: 'A graceful longbow shaped from a fallen willow branch.',
     attackPower: 2,
     flavourText: 'Its draw is gentle, but its reach is not.',
+    maxUses: 30,
+    currentUses: 30,
+    isConsumable: true,
   },
 ]
 
@@ -57,6 +75,9 @@ const MAGIC_HEIRLOOMS: readonly Omit<Item, 'id'>[] = [
     description: 'A gnarled wand that glows with a warm inner light.',
     attackPower: 1,
     flavourText: 'The ember at its tip never goes out — not even in rain.',
+    maxUses: 40,
+    currentUses: 40,
+    isConsumable: true,
   },
   {
     name: 'Moonpetal Staff',
@@ -64,6 +85,9 @@ const MAGIC_HEIRLOOMS: readonly Omit<Item, 'id'>[] = [
     description: 'A slender staff crowned with a luminous moonpetal blossom.',
     attackPower: 1,
     flavourText: 'In darkness it blooms; in danger, it shines.',
+    maxUses: 40,
+    currentUses: 40,
+    isConsumable: true,
   },
   {
     name: 'Dewdrop Charm',
@@ -71,6 +95,9 @@ const MAGIC_HEIRLOOMS: readonly Omit<Item, 'id'>[] = [
     description: 'A small crystal charm that hovers just above your palm.',
     attackPower: 1,
     flavourText: 'It whispers the names of things long forgotten.',
+    maxUses: 40,
+    currentUses: 40,
+    isConsumable: true,
   },
 ]
 
