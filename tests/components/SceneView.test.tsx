@@ -87,7 +87,7 @@ describe('SceneView', () => {
     expect(useGameStore.getState().view).toBe('inventory')
   })
 
-    it('shows End Turn button and AP display during combat', () => {
+    it('shows AP display during combat', () => {
       const enemy: ActiveEnemy = {
         name: 'Test',
         strength: 1,
@@ -103,8 +103,6 @@ describe('SceneView', () => {
         combatLog: [],
       })
       render(<SceneView />)
-      // There are multiple end-turn buttons, so check for at least one
-      expect(screen.getAllByTestId('end-turn-button').length).toBeGreaterThan(0)
       expect(screen.getByTestId('ap-display')).toBeInTheDocument()
     })
 
@@ -235,9 +233,9 @@ describe('SceneView', () => {
     it('keeps end turn button during combat', () => {
       enterCombat()
       render(<SceneView />)
-      // Filter out the BattleStage end-turn button
+      // There should be one end-turn button in BattleActions
       const endTurnButtons = screen.getAllByTestId('end-turn-button')
-      expect(endTurnButtons.length).toBeGreaterThan(0)
+      expect(endTurnButtons.length).toBe(1)
     })
 
     it('hides peripheral glimpses during combat', () => {

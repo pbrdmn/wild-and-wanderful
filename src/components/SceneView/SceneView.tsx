@@ -178,15 +178,6 @@ export function SceneView() {
             </button>
           </>
         )}
-        {inCombat && (
-          <button
-            className={styles.actionButton}
-            onClick={endTurn}
-            data-testid="end-turn-button"
-          >
-            End Turn
-          </button>
-        )}
       </footer>
     </div>
   )
