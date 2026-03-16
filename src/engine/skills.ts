@@ -105,13 +105,14 @@ export function getAvailableSkills(player: Player): Skill[] {
   return player.unlockedSkillIds
     .map((id) => getSkillById(id))
     .filter((s): s is Skill => s !== undefined && 
-      (s.requiredItemCategory === null || (equipped && s.requiredItemCategory === equipped.category)))
+      (s.requiredItemCategory === null || (equipped !== null && s.requiredItemCategory === equipped.category)))
 }
 
 export function canUseSkill(player: Player, skillId: string): boolean {
   const skill = getSkillById(skillId)
   if (!skill) return false
   if (!player.unlockedSkillIds.includes(skillId)) return false
+  if (!player.activeSkillIds.includes(skillId)) return false
   if (player.ap < skill.apCost) return false
   const equipped = getEquippedItem(player)
   if (skill.requiredItemCategory !== null && (!equipped || equipped.category !== skill.requiredItemCategory)) return false
