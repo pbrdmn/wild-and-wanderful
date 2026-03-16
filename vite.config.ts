@@ -15,5 +15,5 @@ export default defineConfig({
     setupFiles: './src/test-setup.ts',
     css: true,
   },
-  base: '/wild-and-wanderful/',
+  base: process.env.NODE_ENV === 'production' ? '/wild-and-wanderful/' : '/',
 })
