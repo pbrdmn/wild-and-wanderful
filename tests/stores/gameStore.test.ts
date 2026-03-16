@@ -376,16 +376,21 @@ describe('gameStore', () => {
       expect(state.activeEnemy).toBeUndefined()
     })
 
-    it('attack fails when no weapon is equipped', () => {
+    it('attack succeeds when no weapon is equipped (fists)', () => {
       enterCombat()
       useGameStore.setState({
         player: {
           ...useGameStore.getState().player,
           inventory: { items: [], equippedItemId: null, maxSlots: 5 },
         },
+        activeEnemy: {
+          ...useGameStore.getState().activeEnemy!,
+          hp: 1, // Make enemy weak so fists can defeat it
+        },
       })
       useGameStore.getState().attack()
-      expect(useGameStore.getState().message).toContain('weapon')
+      // After fists attack, enemy should be defeated, so we should see victory message
+      expect(useGameStore.getState().message).toContain('defeated')
     })
 
     it('flee returns player to exploring when successful', () => {

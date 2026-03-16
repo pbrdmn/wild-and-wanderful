@@ -90,13 +90,36 @@ describe('playerBasicAttack', () => {
     expect(result.reason).toContain('AP')
   })
 
-  it('fails when no weapon is equipped', () => {
+  it('attacks with fists when no weapon is equipped', () => {
     const player = makePlayer({
       inventory: { items: [], equippedItemId: null, maxSlots: 5 },
     })
-    const result = playerBasicAttack(player, makeEnemy())
-    expect(result.success).toBe(false)
-    expect(result.reason).toContain('weapon')
+    const enemy = makeEnemy({ hp: 5 })
+    const result = playerBasicAttack(player, enemy)
+    expect(result.success).toBe(true)
+    expect(result.enemy.hp).toBe(4) // 5 - 1 (fists damage)
+    expect(result.player.ap).toBe(DEFAULT_MAX_AP - AP_COST_ATTACK)
+    expect(result.messages[0]).toContain('punch')
+    expect(result.messages[0]).toContain('1 damage')
+  })
+
+  it('fists attack does not reduce HP below 0', () => {
+    const enemy = makeEnemy({ hp: 1 })
+    const player = makePlayer({
+      inventory: { items: [], equippedItemId: null, maxSlots: 5 },
+    })
+    const result = playerBasicAttack(player, enemy)
+    expect(result.enemy.hp).toBe(0)
+  })
+
+  it('fists attack reports victory message when enemy is defeated', () => {
+    const enemy = makeEnemy({ hp: 1 })
+    const player = makePlayer({
+      inventory: { items: [], equippedItemId: null, maxSlots: 5 },
+    })
+    const result = playerBasicAttack(player, enemy)
+    expect(result.enemy.hp).toBe(0)
+    expect(result.messages.some((m) => m.includes('defeated'))).toBe(true)
   })
 
   it('reports victory message when enemy is defeated', () => {

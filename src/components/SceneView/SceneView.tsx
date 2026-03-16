@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useGameStore } from '../../stores/gameStore'
 import { getBiomeData } from '../../engine/biomes'
-import { AP_COST_ATTACK, AP_COST_FLEE } from '../../engine/types'
 import { SPECIES_LABELS } from '../../sprites/spriteConfig'
 import { playSound, isMuted, setMuted } from '../../utils/audio'
 import { BattleStage } from '../BattleStage/BattleStage'
 import { DirectionalGrid } from '../DirectionalGrid'
+import { BattleActions } from '../BattleActions'
 import styles from './SceneView.module.css'
 
 export function SceneView() {
@@ -14,19 +14,14 @@ export function SceneView() {
   const gamePhase = useGameStore((s) => s.gamePhase)
   const activeEnemy = useGameStore((s) => s.activeEnemy)
   const message = useGameStore((s) => s.message)
-  const combatLog = useGameStore((s) => s.combatLog)
   const setView = useGameStore((s) => s.setView)
   const endTurn = useGameStore((s) => s.endTurn)
   const storeRest = useGameStore((s) => s.rest)
-  const storeAttack = useGameStore((s) => s.attack)
-  const activateSkill = useGameStore((s) => s.activateSkill)
-  const flee = useGameStore((s) => s.flee)
   const retire = useGameStore((s) => s.retire)
   const currentTileDescription = useGameStore((s) => s.currentTileDescription)
   const peripheralGlimpses = useGameStore((s) => s.peripheralGlimpses)
   const storeMove = useGameStore((s) => s.movePlayer)
   const equippedItem = useGameStore((s) => s.equippedItem)
-  const availableSkills = useGameStore((s) => s.availableSkills)
 
   const [soundMuted, setSoundMuted] = useState(isMuted())
 
@@ -47,22 +42,15 @@ export function SceneView() {
     playSound('tap')
   }
 
-  const attack = () => {
-    storeAttack()
-    playSound('hit')
-  }
 
   const currentTile = world.tiles[player.y][player.x]
   const biome = getBiomeData(currentTile.terrain)
   const description = currentTileDescription()
   const glimpses = peripheralGlimpses()
   const equipped = equippedItem()
-  const skills = availableSkills()
 
   const inCombat = gamePhase === 'combat' && activeEnemy != null
   const canRest = player.hp < player.maxHp
-  const canAttack = inCombat && player.ap >= AP_COST_ATTACK && equipped != null
-  const canFlee = inCombat && player.ap >= AP_COST_FLEE
 
   return (
     <div className={styles.sceneView}>
@@ -134,50 +122,7 @@ export function SceneView() {
         )}
 
         {inCombat && (
-          <div className={styles.combatPanel} data-testid="combat-panel">
-            {combatLog.length > 0 && (
-              <div className={styles.combatLog} data-testid="combat-log">
-                {combatLog.map((msg, i) => (
-                  <p key={i} className={styles.combatLogEntry}>{msg}</p>
-                ))}
-              </div>
-            )}
-
-            <div className={styles.combatActions} data-testid="combat-actions">
-              <button
-                className={`${styles.combatButton} ${!canAttack ? styles.disabled : ''}`}
-                onClick={attack}
-                disabled={!canAttack}
-                data-testid="attack-button"
-              >
-                Attack
-              </button>
-              {skills.map((skill) => {
-                const canUse = player.ap >= skill.apCost
-                const handleUseSkill = () => activateSkill(skill.id)
-                return (
-                  <button
-                    key={skill.id}
-                    className={`${styles.combatButton} ${styles.skillButton} ${!canUse ? styles.disabled : ''}`}
-                    onClick={handleUseSkill}
-                    disabled={!canUse}
-                    data-testid={`skill-button-${skill.id}`}
-                    title={skill.description}
-                  >
-                    {skill.name} ({skill.apCost} AP)
-                  </button>
-                )
-              })}
-              <button
-                className={`${styles.combatButton} ${styles.fleeButton} ${!canFlee ? styles.disabled : ''}`}
-                onClick={flee}
-                disabled={!canFlee}
-                data-testid="flee-button"
-              >
-                Flee
-              </button>
-            </div>
-          </div>
+          <BattleActions />
         )}
 
         {message && (
