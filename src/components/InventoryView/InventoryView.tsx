@@ -58,9 +58,17 @@ export function InventoryView() {
                     <span className={styles.itemName}>
                       {item.name}
                       {equipped && <span className={styles.equippedBadge}>Equipped</span>}
+                      {item.quantity && item.quantity > 1 && (
+                        <span className={styles.quantityBadge}>Qty {item.quantity}</span>
+                      )}
                     </span>
                     <span className={styles.itemMeta}>
                       {CATEGORY_LABELS[item.category] ?? item.category} &middot; Atk {item.attackPower}
+                      {item.isConsumable && (
+                        <span className={styles.durabilityMeta}>
+                          &middot; {item.currentUses}/{item.maxUses} uses
+                        </span>
+                      )}
                     </span>
                   </div>
                 </button>

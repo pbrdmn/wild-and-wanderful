@@ -13,12 +13,15 @@ import { ItemCategory, DEFAULT_MAX_AP } from '../../src/engine/types'
 
 function makeItem(overrides: Partial<Item> = {}): Item {
   return {
-    id: 'sword-1',
+    id: 'item-1',
     name: 'Test Sword',
     category: ItemCategory.Melee,
     description: 'A test weapon.',
     attackPower: 3,
     flavourText: 'For testing only.',
+    maxUses: 20,
+    currentUses: 20,
+    isConsumable: true,
     ...overrides,
   }
 }

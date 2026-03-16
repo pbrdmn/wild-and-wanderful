@@ -84,6 +84,23 @@
   gap: var(--spacing-sm);
 }
 
+.quantityBadge {
+  font-family: var(--font-heading);
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-parchment);
+  background-color: var(--color-secondary);
+  padding: 1px var(--spacing-xs);
+  border-radius: var(--radius-sm);
+}
+
+.durabilityMeta {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
 .equippedBadge {
   font-family: var(--font-heading);
   font-size: 0.65rem;

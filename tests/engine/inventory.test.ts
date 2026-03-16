@@ -19,6 +19,9 @@ function makeItem(overrides: Partial<Item> = {}): Item {
     description: 'A test weapon.',
     attackPower: 3,
     flavourText: 'For testing only.',
+    maxUses: 20,
+    currentUses: 20,
+    isConsumable: true,
     ...overrides,
   }
 }
@@ -60,13 +63,38 @@ describe('addItem', () => {
   })
 
   it('fails when inventory is full', () => {
-    const items = Array.from({ length: 5 }, (_, i) => makeItem({ id: `item-${i}` }))
+    const items = Array.from({ length: 5 }, (_, i) => makeItem({ id: `item-${i}`, name: `Item ${i}` })) // Different names to avoid merging
     const player = makePlayer({
       inventory: { items, equippedItemId: null, maxSlots: 5 },
     })
-    const result = addItem(player, makeItem({ id: 'item-overflow' }))
+    const result = addItem(player, makeItem({ id: 'item-overflow', name: 'Overflow Item' }))
     expect(result.success).toBe(false)
     expect(result.reason).toContain('full')
+  })
+
+  it('merges duplicate items by incrementing quantity', () => {
+    const item1 = makeItem({ id: 'item-1' })
+    const item2 = makeItem({ id: 'item-2', name: 'Test Sword' }) // Same name and category
+    const player = makePlayer({
+      inventory: { items: [item1], equippedItemId: null, maxSlots: 5 },
+    })
+    const result = addItem(player, item2)
+    expect(result.success).toBe(true)
+    expect(result.player.inventory.items).toHaveLength(1)
+    expect(result.player.inventory.items[0].quantity).toBe(2)
+  })
+
+  it('adds new item when no duplicates exist', () => {
+    const item1 = makeItem({ id: 'item-1', quantity: 1 }) // Ensure first item has quantity
+    const item2 = makeItem({ id: 'item-2', name: 'Different Sword', quantity: 1 }) // Different name
+    const player = makePlayer({
+      inventory: { items: [item1], equippedItemId: null, maxSlots: 5 },
+    })
+    const result = addItem(player, item2)
+    expect(result.success).toBe(true)
+    expect(result.player.inventory.items).toHaveLength(2)
+    expect(result.player.inventory.items[0].quantity).toBe(1)
+    expect(result.player.inventory.items[1].quantity).toBe(1)
   })
 
   it('does not mutate the original player', () => {
