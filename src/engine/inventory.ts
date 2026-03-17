@@ -89,16 +89,11 @@ export function equipItem(player: Player, itemId: string): InventoryResult {
     return { success: false, player, reason: 'Item not found in inventory.' }
   }
   
-  // Reset currentUses when equipping an item
-  const updatedItems = inventory.items.map(i => 
-    i.id === itemId ? { ...i, currentUses: i.maxUses } : i
-  )
-  
   return {
     success: true,
     player: {
       ...player,
-      inventory: { ...inventory, equippedItemId: itemId, items: updatedItems },
+      inventory: { ...inventory, equippedItemId: itemId, items: inventory.items },
     },
   }
 }
@@ -125,17 +120,12 @@ export function swapEquipment(player: Player, itemId: string): InventoryResult {
     return { success: false, player, reason: 'Item is already equipped.' }
   }
   
-  // Reset currentUses when equipping an item
-  const updatedItems = player.inventory.items.map(i => 
-    i.id === itemId ? { ...i, currentUses: i.maxUses } : i
-  )
-  
   return {
     success: true,
     player: {
       ...player,
       ap: 0,
-      inventory: { ...player.inventory, equippedItemId: itemId, items: updatedItems },
+      inventory: { ...player.inventory, equippedItemId: itemId, items: player.inventory.items },
     },
   }
 }
@@ -173,22 +163,33 @@ export function activateEquippedItem(player: Player): InventoryResult {
             currentUses: item.maxUses
           }
         } else {
-          // No more items, unequip
-          return { ...item, currentUses: 0 }
+          // No more items, remove from inventory entirely
+          return null
         }
       }
       
       return { ...item, currentUses: newCurrentUses }
     }
     return item
-  })
+  }).filter(item => item !== null) // Remove null items (fully consumed with quantity 1)
   
   // Check if we need to unequip the item
   let newEquippedItemId = inventory.equippedItemId
   const updatedEquippedItem = updatedItems.find(i => i.id === inventory.equippedItemId)
   
-  if (updatedEquippedItem && updatedEquippedItem.currentUses <= 0) {
+  if (!updatedEquippedItem || updatedEquippedItem.currentUses <= 0) {
     newEquippedItemId = null
+  }
+  
+  // Generate appropriate message
+  let message = null
+  const originalItem = inventory.items.find(i => i.id === equippedItem.id)
+  if (originalItem && originalItem.currentUses === 1) {
+    if (originalItem.quantity && originalItem.quantity === 1) {
+      message = `Your ${originalItem.name} has worn out and been destroyed.`
+    } else if (originalItem.quantity && originalItem.quantity > 1) {
+      message = `Your ${originalItem.name} has worn out. You use the next one.`
+    }
   }
   
   return {
@@ -200,6 +201,7 @@ export function activateEquippedItem(player: Player): InventoryResult {
         items: updatedItems,
         equippedItemId: newEquippedItemId
       }
-    }
+    },
+    reason: message ?? undefined
   }
 }

@@ -19,6 +19,30 @@
   border-radius: 4px;
 }
 
+.turnIndicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.yourTurn {
+  color: #48bb78;
+  font-weight: bold;
+  font-size: 1.1rem;
+  text-shadow: 0 0 10px rgba(72, 187, 120, 0.3);
+}
+
+.enemyTurn {
+  color: #f56565;
+  font-weight: bold;
+  font-size: 1.1rem;
+  text-shadow: 0 0 10px rgba(245, 101, 101, 0.3);
+}
+
 .playerStatus, .enemyStatus {
   display: flex;
   align-items: center;
