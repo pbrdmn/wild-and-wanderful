@@ -7,6 +7,7 @@ import {
   unequipItem,
   swapEquipment,
   getEquippedItem,
+  activateEquippedItem,
 } from '../../src/engine/inventory'
 import type { Player, Item } from '../../src/engine/types'
 import { ItemCategory, DEFAULT_MAX_AP } from '../../src/engine/types'
@@ -250,5 +251,107 @@ describe('getEquippedItem', () => {
       inventory: { items: [], equippedItemId: 'ghost', maxSlots: 5 },
     })
     expect(getEquippedItem(player)).toBeNull()
+  })
+})
+
+describe('activateEquippedItem', () => {
+  it('fails when no item is equipped', () => {
+    const player = makePlayer()
+    const result = activateEquippedItem(player)
+    expect(result.success).toBe(false)
+    expect(result.reason).toContain('No item equipped')
+  })
+
+  it('succeeds for non-consumable items without changing uses', () => {
+    const item = makeItem({ isConsumable: false, currentUses: 10 })
+    const player = makePlayer({
+      inventory: { items: [item], equippedItemId: 'item-1', maxSlots: 5 },
+    })
+    const result = activateEquippedItem(player)
+    expect(result.success).toBe(true)
+    expect(result.player.inventory.items[0].currentUses).toBe(10)
+  })
+
+  it('reduces currentUses for consumable items', () => {
+    const item = makeItem({ currentUses: 5 })
+    const player = makePlayer({
+      inventory: { items: [item], equippedItemId: 'item-1', maxSlots: 5 },
+    })
+    const result = activateEquippedItem(player)
+    expect(result.success).toBe(true)
+    expect(result.player.inventory.items[0].currentUses).toBe(4)
+  })
+
+  it('uses next item from quantity when current item is consumed', () => {
+    const item = makeItem({ currentUses: 1, quantity: 2 })
+    const player = makePlayer({
+      inventory: { items: [item], equippedItemId: 'item-1', maxSlots: 5 },
+    })
+    const result = activateEquippedItem(player)
+    expect(result.success).toBe(true)
+    expect(result.player.inventory.items[0].quantity).toBe(1)
+    expect(result.player.inventory.items[0].currentUses).toBe(20) // maxUses
+    expect(result.player.inventory.equippedItemId).toBe('item-1')
+  })
+
+  it('removes item from inventory when fully consumed with quantity 1', () => {
+    const item = makeItem({ currentUses: 1, quantity: 1 })
+    const player = makePlayer({
+      inventory: { items: [item], equippedItemId: 'item-1', maxSlots: 5 },
+    })
+    const result = activateEquippedItem(player)
+    expect(result.success).toBe(true)
+    expect(result.player.inventory.items).toHaveLength(0)
+    expect(result.player.inventory.equippedItemId).toBeNull()
+  })
+
+  it('generates message when item with quantity 1 is destroyed', () => {
+    const item = makeItem({ currentUses: 1, quantity: 1, name: 'Test Dagger' })
+    const player = makePlayer({
+      inventory: { items: [item], equippedItemId: 'item-1', maxSlots: 5 },
+    })
+    const result = activateEquippedItem(player)
+    expect(result.success).toBe(true)
+    expect(result.reason).toBe('Your Test Dagger has worn out and been destroyed.')
+  })
+
+  it('generates message when item with quantity > 1 is consumed', () => {
+    const item = makeItem({ currentUses: 1, quantity: 3, name: 'Test Dagger' })
+    const player = makePlayer({
+      inventory: { items: [item], equippedItemId: 'item-1', maxSlots: 5 },
+    })
+    const result = activateEquippedItem(player)
+    expect(result.success).toBe(true)
+    expect(result.reason).toBe('Your Test Dagger has worn out. You use the next one.')
+  })
+
+  it('does not generate message when item is not at last use', () => {
+    const item = makeItem({ currentUses: 5, quantity: 1, name: 'Test Dagger' })
+    const player = makePlayer({
+      inventory: { items: [item], equippedItemId: 'item-1', maxSlots: 5 },
+    })
+    const result = activateEquippedItem(player)
+    expect(result.success).toBe(true)
+    expect(result.reason).toBeUndefined()
+  })
+
+  it('unequips item when it is fully consumed', () => {
+    const item = makeItem({ currentUses: 1, quantity: 1 })
+    const player = makePlayer({
+      inventory: { items: [item], equippedItemId: 'item-1', maxSlots: 5 },
+    })
+    const result = activateEquippedItem(player)
+    expect(result.success).toBe(true)
+    expect(result.player.inventory.equippedItemId).toBeNull()
+  })
+
+  it('does not unequip item when quantity > 1', () => {
+    const item = makeItem({ currentUses: 1, quantity: 2 })
+    const player = makePlayer({
+      inventory: { items: [item], equippedItemId: 'item-1', maxSlots: 5 },
+    })
+    const result = activateEquippedItem(player)
+    expect(result.success).toBe(true)
+    expect(result.player.inventory.equippedItemId).toBe('item-1')
   })
 })

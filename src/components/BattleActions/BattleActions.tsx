@@ -6,6 +6,7 @@ export function BattleActions() {
   const activeEnemy = useGameStore((s) => s.activeEnemy)
   const gamePhase = useGameStore((s) => s.gamePhase)
   const combatLog = useGameStore((s) => s.combatLog)
+  const playerTurn = useGameStore((s) => s.playerTurn)
   const attack = useGameStore((s) => s.attack)
   const flee = useGameStore((s) => s.flee)
   const openInventory = useGameStore((s) => s.openInventory)
@@ -16,10 +17,10 @@ export function BattleActions() {
     return null
   }
 
-  const canAttack = player.ap >= 1
-  const canFlee = player.ap >= 1
-  const canOpenInventory = player.ap >= 1
-  const canEndTurn = player.ap >= 1
+  const canAttack = player.ap >= 1 && playerTurn
+  const canFlee = player.ap >= 1 && playerTurn
+  const canOpenInventory = player.ap >= 1 && playerTurn
+  const canEndTurn = playerTurn
 
   return (
     <div className={styles.battleActions} data-testid="battle-actions">
@@ -34,6 +35,14 @@ export function BattleActions() {
           <span className={styles.statusLabel}>{activeEnemy.name} HP:</span>
           <span className={styles.statusValue}>{activeEnemy.hp}/{activeEnemy.maxHp}</span>
         </div>
+      </div>
+
+      <div className={styles.turnIndicator}>
+        {playerTurn ? (
+          <div className={styles.yourTurn}>Your Turn</div>
+        ) : (
+          <div className={styles.enemyTurn}>Enemy's Turn</div>
+        )}
       </div>
 
       <div className={styles.actionButtons}>
@@ -74,7 +83,7 @@ export function BattleActions() {
           data-testid="end-turn-button"
         >
           End Turn
-          <span className={styles.apCost}>(1 AP)</span>
+          <span className={styles.apCost}>(0 AP)</span>
         </button>
       </div>
 
