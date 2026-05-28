@@ -14,6 +14,10 @@ export interface RestResult {
 }
 
 export function rest(player: Player, rng: () => number): RestResult {
+  if (player.hasRestedOnCurrentTile) {
+    return { success: false, reason: 'You have already rested on this tile.', player, woundHealed: false, ambushed: false }
+  }
+
   let updatedPlayer: Player = { ...player }
 
   let hpHealed = false

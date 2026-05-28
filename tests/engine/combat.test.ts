@@ -18,6 +18,9 @@ function makeItem(overrides: Partial<Item> = {}): Item {
     description: 'A test weapon.',
     attackPower: 3,
     flavourText: 'For testing only.',
+    maxUses: 10,
+    currentUses: 10,
+    isConsumable: false,
     ...overrides,
   }
 }
@@ -31,6 +34,7 @@ function makePlayer(overrides: Partial<Player> = {}): Player {
     hp: 3, maxHp: 3,
     inventory: { items: [sword], equippedItemId: 'sword-1', maxSlots: 5 },
     unlockedSkillIds: [], activeSkillIds: [], maxActiveSkills: 2,
+    hasRestedOnCurrentTile: false,
     ...overrides,
   }
 }
@@ -39,6 +43,7 @@ function makeEnemy(overrides: Partial<ActiveEnemy> = {}): ActiveEnemy {
   return {
     name: 'Test Enemy',
     strength: 1,
+    level: 1,
     hp: 3,
     maxHp: 3,
     hasInitiative: false,

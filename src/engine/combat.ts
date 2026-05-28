@@ -190,9 +190,10 @@ export function enemyTurn(enemy: ActiveEnemy, player: Player, playerDodgeChance:
     return { player, enemy: updatedEnemy, messages }
   }
 
-  // Enemy attacks: each hit inflicts 1 damage
-  const updatedPlayer = { ...player, hp: Math.max(0, player.hp - 1) }
-  messages.push(`The ${enemy.name} strikes you for 1 damage!`)
+  // Enemy attacks: deal Max(1, Level / 2) damage
+  const damage = Math.max(1, Math.floor(enemy.level / 2))
+  const updatedPlayer = { ...player, hp: Math.max(0, player.hp - damage) }
+  messages.push(`The ${enemy.name} strikes you for ${damage} damage!`)
 
   if (updatedPlayer.hp <= 0) {
     messages.push('You are overwhelmed by your wounds...')

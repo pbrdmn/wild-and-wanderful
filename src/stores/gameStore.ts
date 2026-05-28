@@ -108,6 +108,7 @@ function createInitialPlayer(
     unlockedSkillIds: ['search'],
     activeSkillIds: ['search'],
     maxActiveSkills: 2,
+    hasRestedOnCurrentTile: false,
   }
 }
 
@@ -213,6 +214,11 @@ export const useGameStore = create<GameStore>((set, get) => {
         previousPosition: { x: player.x, y: player.y },
       }
 
+      // Reset rest tracking when moving to a new tile
+      if (result.player.x !== player.x || result.player.y !== player.y) {
+        updates.player = { ...result.player, hasRestedOnCurrentTile: false }
+      }
+
       if (x === world.questMarker.x && y === world.questMarker.y) {
         set(updates)
         get().completeQuest()
@@ -253,6 +259,11 @@ export const useGameStore = create<GameStore>((set, get) => {
 
       const updates: Partial<GameStore> = {
         player: result.player,
+      }
+
+      // Set hasRestedOnCurrentTile to true when rest is successful
+      if (result.success && !result.ambushed) {
+        updates.player = { ...result.player, hasRestedOnCurrentTile: true }
       }
 
       if (result.ambushed && result.enemy) {
@@ -601,59 +612,52 @@ export const useGameStore = create<GameStore>((set, get) => {
         return
       }
 
-      // Check if player has AP left
-      if (player.ap > 0) {
-        // Player ends turn early, enemy attacks
-        if (!activeEnemy) return
+      // Always trigger enemy attack after player's turn, regardless of AP
+      if (!activeEnemy) return
 
-        const enemyResult = engineEnemyTurn(activeEnemy, player, 0, false)
-        const fullLog = [...combatLog, 'You end your turn.', ...enemyResult.messages]
-        const outcome = getCombatOutcome(enemyResult.player, enemyResult.enemy)
+      const enemyResult = engineEnemyTurn(activeEnemy, player, 0, false)
+      const fullLog = [...combatLog, 'You end your turn.', ...enemyResult.messages]
+      const outcome = getCombatOutcome(enemyResult.player, enemyResult.enemy)
 
-        if (outcome === 'defeat') {
-          const startPos = findStartingPosition(get().world)
-          set({
-            player: { ...enemyResult.player, x: startPos.x, y: startPos.y, hp: 5, ap: DEFAULT_MAX_AP },
-            activeEnemy: undefined,
-            gamePhase: 'exploring',
-            combatLog: [],
-            message: 'You retreat to the village, battered but alive.',
-          })
-          return
-        }
-
-        if (outcome === 'victory') {
-          const xp = calculateXpReward(activeEnemy)
-          let victoryPlayer = { ...enemyResult.player, xp: enemyResult.player.xp + xp }
-          const levelResult = checkLevelUp(victoryPlayer)
-          victoryPlayer = levelResult.player
-          const levelMsg = levelResult.leveled ? ` You are now level ${levelResult.newLevel}!` : ''
-          set({
-            player: victoryPlayer,
-            activeEnemy: undefined,
-            gamePhase: 'exploring',
-            combatLog: [],
-            message: `${fullLog[fullLog.length - 1]} (+${xp} XP)${levelMsg}`,
-          })
-          return
-        }
-
+      if (outcome === 'defeat') {
+        const startPos = findStartingPosition(get().world)
         set({
-          player: enemyResult.player,
-          activeEnemy: enemyResult.enemy,
-          combatLog: fullLog.slice(-5),
-          message: fullLog[fullLog.length - 1],
-          playerTurn: true, // Reset to player's turn
+          player: { ...enemyResult.player, x: startPos.x, y: startPos.y, hp: 5, ap: DEFAULT_MAX_AP },
+          activeEnemy: undefined,
+          gamePhase: 'exploring',
+          combatLog: [],
+          message: 'You retreat to the village, battered but alive.',
+          playerTurn: true, // Reset to player's turn for next encounter
         })
-      } else {
-        // Player has no AP left, just reset AP and increment rounds
-        const updatedPlayer = { ...player, ap: player.maxAp }
-        set({
-          player: updatedPlayer,
-          combatRounds: combatRounds + 1,
-          message: 'You do nothing this turn.',
-        })
+        return
       }
+
+      if (outcome === 'victory') {
+        const xp = calculateXpReward(activeEnemy)
+        let victoryPlayer = { ...enemyResult.player, xp: enemyResult.player.xp + xp }
+        const levelResult = checkLevelUp(victoryPlayer)
+        victoryPlayer = levelResult.player
+        const levelMsg = levelResult.leveled ? ` You are now level ${levelResult.newLevel}!` : ''
+        set({
+          player: victoryPlayer,
+          activeEnemy: undefined,
+          gamePhase: 'exploring',
+          combatLog: [],
+          message: `${fullLog[fullLog.length - 1]} (+${xp} XP)${levelMsg}`,
+          playerTurn: true, // Reset to player's turn for next encounter
+        })
+        return
+      }
+
+      // Enemy attacked, now it's the player's turn with full AP
+      set({
+        player: { ...enemyResult.player, ap: enemyResult.player.maxAp },
+        activeEnemy: enemyResult.enemy,
+        combatLog: fullLog.slice(-5),
+        message: fullLog[fullLog.length - 1],
+        playerTurn: true, // Player's turn now with full AP
+        combatRounds: combatRounds + 1, // Increment combat rounds
+      })
     },
 
     unlockSkill: (skillId: string) => {

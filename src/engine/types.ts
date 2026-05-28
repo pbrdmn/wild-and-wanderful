@@ -99,6 +99,7 @@ export interface Player {
   unlockedSkillIds: string[]
   activeSkillIds: string[]
   maxActiveSkills: number
+  hasRestedOnCurrentTile: boolean
 }
 
 export interface Enemy {
