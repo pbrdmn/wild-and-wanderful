@@ -20,6 +20,7 @@ function makePlayer(overrides: Partial<Player> = {}): Player {
     hp: 0, maxHp: 3,
     inventory: { items: [], equippedItemId: null, maxSlots: 5 },
     unlockedSkillIds: [], activeSkillIds: [], maxActiveSkills: 2,
+    hasRestedOnCurrentTile: false,
     ...overrides,
   }
 }
@@ -125,7 +126,7 @@ describe('discoveries', () => {
       const result = resolveDiscovery(player, 'sunlit-cache')
       expect(result).not.toBeNull()
       expect(result!.player.inventory.items).toHaveLength(1)
-      expect(result!.player.inventory.items[0].name).toBe('Rough-Hewn Club')
+      expect(result!.player.inventory.items[0].name).toBe('Heavy Iron Club')
       expect(result!.message).toContain('Found')
     })
 

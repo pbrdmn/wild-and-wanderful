@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { IntroView } from '../../src/components/IntroView'
 import { useGameStore } from '../../src/stores/gameStore'
@@ -83,7 +83,9 @@ describe('IntroView', () => {
     await advanceToHeirloomStep()
     const { offeredItems } = useGameStore.getState()
     offeredItems.forEach((item) => {
-      expect(screen.getByText(`Attack: ${item.attackPower}`)).toBeInTheDocument()
+      const card = screen.getByTestId(`heirloom-card-${item.id}`)
+      const attackText = within(card).getByText(`Attack: ${item.attackPower}`)
+      expect(attackText).toBeInTheDocument()
     })
   })
 

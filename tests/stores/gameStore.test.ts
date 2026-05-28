@@ -108,6 +108,17 @@ describe('gameStore', () => {
       useGameStore.setState({
         gamePhase: 'combat',
         player: { ...useGameStore.getState().player, ap: 0 },
+        combatRounds: 1,
+        activeEnemy: {
+          name: 'Test Enemy',
+          strength: 1,
+          level: 1,
+          hp: 3,
+          maxHp: 3,
+          hasInitiative: false,
+          statusEffects: [],
+        },
+        combatLog: [],
       })
       useGameStore.getState().endTurn()
       const state = useGameStore.getState()
